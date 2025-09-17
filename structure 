@@ -38,3 +38,34 @@ openstudent/
 └── .github/
     └── workflows/
         └── deploy.yml          # GitHub Pages CI/CD (optional)
+
+
+OpenStudent/
+├── public/                         ← Public-facing site
+│   ├── index.html                  ← Landing page (intro + featured projects)
+│   ├── projects.html               ← Full archive with tabs and filters
+│   ├── project.html                ← Single project view (optional)
+│   ├── blog/
+│   │   ├── index.html              ← Blog post listing
+│   │   └── post.html               ← Individual blog post view
+│   ├── contribute.html             ← Contributor submission form (future)
+│   └── thankyou.html               ← Confirmation after submission
+│
+├── admin/                          ← Admin-only dashboard
+│   ├── login.html                  ← Supabase Auth login
+│   ├── dashboard.html              ← Overview of metrics and recent uploads
+│   ├── add_project.html            ← Form to submit new project metadata
+│   ├── edit_project.html           ← Update or delete existing projects
+│   └── blog_editor.html            ← Markdown editor for writing blog posts
+│
+├── assets/                         ← Static resources
+│   ├── css/
+│   │   └── style.css               ← Shared styling
+│   ├── js/
+│   │   ├── supabase.js             ← Supabase client setup
+│   │   ├── projects.js             ← Logic for filtering and rendering projects
+│   │   ├── admin.js                ← Logic for admin form handling
+│   │   └── blog.js                 ← Blog rendering and editor logic
+│   └── images/                     ← Local fallback images (optional)
+│
+└── README.md                       ← Project documentation

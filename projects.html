@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Archive - OpenStudent</title>
+    <style>
+        /* Base Styles */
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #64748b;
+            --light: #f8fafc;
+            --dark: #1e293b;
+            --accent: #f59e0b;
+            --border-radius: 8px;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            background-color: #fff;
+        }
+
+        a {
+            text-decoration: none;
+            color: var(--primary);
+            transition: var(--transition);
+        }
+
+        a:hover {
+            color: var(--primary-dark);
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: var(--primary);
+            color: white;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            transition: var(--transition);
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+            color: white;
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-outline:hover {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .section {
+            padding: 80px 0;
+        }
+
+        .section-title {
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .section-title:after {
+            content: '';
+            display: block;
+            width: 60px;
+            height: 4px;
+            background-color: var(--accent);
+            margin: 15px auto;
+            border-radius: 2px;
+        }
+
+        /* Header Styles */
+        header {
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 20px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+        }
+
+        .logo h1 {
+            font-size: 1.8rem;
+            color: var(--primary);
+        }
+
+        .logo span {
+            color: var(--accent);
+        }
+
+        .tagline {
+            font-size: 0.9rem;
+            color: var(--secondary);
+            margin-left: 10px;
+            padding-left: 10px;
+            border-left: 1px solid #ddd;
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+        }
+
+        nav ul li {
+            margin-left: 1.5rem;
+        }
+
+        nav ul li a {
+            color: var(--dark);
+            font-weight: 500;
+        }
+
+        nav ul li a:hover {
+            color: var(--primary);
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--dark);
+        }
+
+        /* Search and Filter Styles */
+        .search-filter-container {
+            margin-bottom: 40px;
+        }
+
+        .search-box {
+            position: relative;
+            max-width: 600px;
+            margin: 0 auto 30px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 15px 20px;
+            padding-left: 45px;
+            border: 2px solid #e2e8f0;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--secondary);
+        }
+
+        .category-tabs {
+            display: flex;
+            overflow-x: auto;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+            scrollbar-width: none; /* Firefox */
+        }
+
+        .category-tabs::-webkit-scrollbar {
+            display: none; /* Chrome, Safari, Edge */
+        }
+
+        .tab {
+            padding: 10px 20px;
+            margin-right: 10px;
+            background-color: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 30px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: var(--transition);
+        }
+
+        .tab:hover {
+            background-color: #f1f5f9;
+        }
+
+        .tab.active {
+            background-color: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* Projects Grid */
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .project-card {
+            background: white;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .project-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .project-image {
+            height: 200px;
+            overflow: hidden;
+        }
+
+        .project-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: var(--transition);
+        }
+
+        .project-card:hover .project-image img {
+            transform: scale(1.05);
+        }
+
+        .project-content {
+            padding: 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .project-meta {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            color: var(--secondary);
+        }
+
+        .project-title {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+            color: var(--dark);
+        }
+
+        .project-tools {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .tool-tag {
+            padding: 4px 10px;
+            background-color: #f1f5f9;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: var(--secondary);
+        }
+
+        .project-description {
+            color: var(--secondary);
+            margin-bottom: 20px;
+            flex-grow: 1;
+        }
+
+        .project-actions {
+            margin-top: auto;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            grid-column: 1 / -1;
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            color: #cbd5e1;
+            margin-bottom: 20px;
+        }
+
+        .empty-state-title {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            color: var(--dark);
+        }
+
+        .empty-state-text {
+            color: var(--secondary);
+            margin-bottom: 30px;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 40px;
+        }
+
+        .pagination-button {
+            padding: 8px 16px;
+            margin: 0 5px;
+            background-color: white;
+            border: 1px solid #e2e8f0;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .pagination-button:hover:not(.disabled) {
+            background-color: #f1f5f9;
+        }
+
+        .pagination-button.active {
+            background-color: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .pagination-button.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination-info {
+            margin: 0 15px;
+            color: var(--secondary);
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--dark);
+            color: white;
+            padding: 60px 0 30px;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .footer-col h3 {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+        .footer-col h3:after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 40px;
+            height: 3px;
+            background-color: var(--accent);
+        }
+
+        .footer-links {
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-bottom: 10px;
+        }
+
+        .footer-links a {
+            color: #cbd5e1;
+        }
+
+        .footer-links a:hover {
+            color: white;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .social-links a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            color: white;
+            transition: var(--transition);
+        }
+
+        .social-links a:hover {
+            background-color: var(--primary);
+            transform: translateY(-3px);
+        }
+
+        .copyright {
+            text-align: center;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 768px) {
+            .header-container {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .logo {
+                margin-bottom: 1rem;
+            }
+
+            .tagline {
+                display: none;
+            }
+
+            nav ul {
+                margin-top: 1rem;
+                justify-content: center;
+            }
+
+            nav ul li {
+                margin: 0 0.75rem;
+            }
+
+            .mobile-menu-btn {
+                display: block;
+                position: absolute;
+                top: 1rem;
+                right: 1rem;
+            }
+
+            nav {
+                display: none;
+            }
+
+            nav.active {
+                display: block;
+                width: 100%;
+            }
+
+            nav.active ul {
+                flex-direction: column;
+                padding: 1rem 0;
+            }
+
+            nav.active ul li {
+                margin: 0.5rem 0;
+            }
+
+            .projects-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header Section -->
+    <header>
+        <div class="container header-container">
+            <div class="logo">
+                <a href="index.html">
+                    <h1>Open<span>Student</span></h1>
+                </a>
+                <p class="tagline">Real Projects. Open Access. Student Powered.</p>
+            </div>
+
+            <button class="mobile-menu-btn" id="mobileMenuBtn">☰</button>
+
+            <nav id="mainNav">
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="projects.html" class="active">Projects</a></li>
+                    <li><a href="blog.html">Blog</a></li>
+                    <li><a href="about.html">About</a></li>
+                    <li><a href="submit.html" class="btn">Submit Project</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="section">
+        <div class="container">
+            <h2 class="section-title">Project Archive</h2>
+
+            <!-- Search and Filter Section -->
+            <div class="search-filter-container">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" class="search-input" id="searchInput" placeholder="Search projects by title, course, semester, or tools...">
+                </div>
+
+                <div class="category-tabs" id="categoryTabs">
+                    <div class="tab active" data-category="all">All Projects</div>
+                    <div class="tab" data-category="MSSQL">MSSQL</div>
+                    <div class="tab" data-category="MySQL">MySQL</div>
+                    <div class="tab" data-category="MongoDB">MongoDB</div>
+                    <div class="tab" data-category="Python">Python</div>
+                    <div class="tab" data-category="Node.js">Node.js</div>
+                    <div class="tab" data-category="Java">Java</div>
+                </div>
+            </div>
+
+            <!-- Projects Grid -->
+            <div class="projects-grid" id="projectsGrid">
+                <!-- Project cards will be dynamically inserted here -->
+
+                <!-- Sample Project 1 -->
+                <div class="project-card" data-categories="MySQL,Python" data-search="CS 498 Database Systems Fall 2023 MySQL Python Flask">
+                    <div class="project-image">
+                        <img src="https://ik.imagekit.io/opensstudent/tr:w-600,h-300/opensstudent/database-project.jpg" alt="Database Management System">
+                    </div>
+                    <div class="project-content">
+                        <div class="project-meta">
+                            <span>CS 498</span>
+                            <span>Fall 2023</span>
+                        </div>
+                        <h3 class="project-title">University Database Management System</h3>
+                        <div class="project-tools">
+                            <span class="tool-tag">MySQL</span>
+                            <span class="tool-tag">Python</span>
+                            <span class="tool-tag">Flask</span>
+                        </div>
+                        <p class="project-description">A comprehensive database system for managing student records, courses, and faculty information with a web-based interface.</p>
+                        <div class="project-actions">
+                            <a href="#" class="btn btn-outline">View Project</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sample Project 2 -->
+                <div class="project-card" data-categories="MongoDB,Node.js" data-search="CS 455 Web Development Winter 2023 MongoDB Node.js Express">
+                    <div class="project-image">
+                        <img src="https://ik.imagekit.io/opensstudent/tr:w-600,h-300/opensstudent/ecommerce-api.jpg" alt="E-commerce API">
+                    </div>
+                    <div class="project-content">
+                        <div class="project-meta">
+                            <span>CS 455</span>
+                            <span>Winter 2023</span>
+                        </div>
+                        <h3 class="project-title">E-commerce REST API</h3>
+                        <div class="project-tools">
+                            <span class="tool-tag">MongoDB</span>
+                            <span class="tool-tag">Node.js</span>
+                            <span class="tool-tag">Express</span>
+                        </div>
+                        <p class="project-description">A RESTful API for an e-commerce platform with user authentication, product catalog, and order management.</p>
+                        <div class="project-actions">
+                            <a href="#" class="btn btn-outline">View Project</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sample Project 3 -->
+                <div class="project-card" data-categories="Java,MSSQL" data-search="CS 402 Enterprise Applications Spring 2023 Java MSSQL">
+                    <div class="project-image">
+                        <img src="https://ik.imagekit.io/opensstudent/tr:w-600,h-300/opensstudent/enterprise-app.jpg" alt="Enterprise Application">
+                    </div>
+                    <div class="project-content">
+                        <div class="project-meta">
+                            <span>CS 402</span>
+                            <span>Spring 2023</span>
+                        </div>
+                        <h3 class="project-title">Inventory Management System</h3>
+                        <div class="project-tools">
+                            <span class="tool-tag">Java</span>
+                            <span class="tool-tag">MSSQL</span>
+                            <span class="tool-tag">Spring Boot</span>
+                        </div>
+                        <p class="project-description">An enterprise-grade inventory management system with reporting features and multi-user support.</p>
+                        <div class="project-actions">
+                            <a href="#" class="btn btn-outline">View Project</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sample Project 4 -->
+                <div class="project-card" data-categories="Python" data-search="DATA 301 Machine Learning Fall 2022 Python TensorFlow">
+                    <div class="project-image">
+                        <img src="https://ik.imagekit.io/opensstudent/tr:w-600,h-300/opensstudent/ml-project.jpg" alt="Machine Learning Project">
+                    </div>
+                    <div class="project-content">
+                        <div class="project-meta">
+                            <span>DATA 301</span>
+                            <span>Fall 2022</span>
+                        </div>
+                        <h3 class="project-title">Image Classification with CNN</h3>
+                        <div class="project-tools">
+                            <span class="tool-tag">Python</span>
+                            <span class="tool-tag">TensorFlow</span>
+                            <span class="tool-tag">Keras</span>
+                        </div>
+                        <p class="project-description">A convolutional neural network for image classification trained on the CIFAR-10 dataset.</p>
+                        <div class="project-actions">
+                            <a href="#" class="btn btn-outline">View Project</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sample Project 5 -->
+                <div class="project-card" data-categories="Node.js,MongoDB" data-search="CS 365 Web Services Winter 2022 Node.js MongoDB">
+                    <div class="project-image">
+                        <img src="https://ik.imagekit.io/opensstudent/tr:w-600,h-300/opensstudent/realtime-chat.jpg" alt="Real-time Chat Application">
+                    </div>
+                    <div class="project-content">
+                        <div class="project-meta">
+                            <span>CS 365</span>
+                            <span>Winter 2022</span>
+                        </div>
+                        <h3 class="project-title">Real-time Chat Application</h3>
+                        <div class="project-tools">
+                            <span class="tool-tag">Node.js</span>
+                            <span class="tool-tag">MongoDB</span>
+                            <span class="tool-tag">Socket.io</span>
+                        </div>
+                        <p class="project-description">A real-time chat application with multiple rooms, user authentication, and message history.</p>
+                        <div class="project-actions">
+                            <a href="#" class="btn btn-outline">View Project</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sample Project 6 -->
+                <div class="project-card" data-categories="Java,MySQL" data-search="CS 308 Software Engineering Spring 2022 Java MySQL">
+                    <div class="project-image">
+                        <img src="https://ik.imagekit.io/opensstudent/tr:w-600,h-300/opensstudent/task-manager.jpg" alt="Task Management System">
+                    </div>
+                    <div class="project-content">
+                        <div class="project-meta">
+                            <span>CS 308</span>
+                            <span>Spring 2022</span>
+                        </div>
+                        <h3 class="project-title">Collaborative Task Management System</h3>
+                        <div class="project-tools">
+                            <span class="tool-tag">Java</span>
+                            <span class="tool-tag">MySQL</span>
+                            <span class="tool-tag">JavaFX</span>
+                        </div>
+                        <p class="project-description">A desktop application for team task management with assignment tracking and progress monitoring.</p>
+                        <div class="project-actions">
+                            <a href="#" class="btn btn-outline">View Project</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Empty State (initially hidden) -->
+            <div class="empty-state" id="emptyState" style="display: none;">
+                <div class="empty-state-icon">📁</div>
+                <h3 class="empty-state-title">No projects found</h3>
+                <p class="empty-state-text">No projects match your selected filters. Try a different category or search term, or be the first to contribute a project in this category!</p>
+                <a href="submit.html" class="btn">Submit a Project</a>
+            </div>
+
+            <!-- Pagination Controls -->
+            <div class="pagination" id="pagination">
+                <button class="pagination-button disabled" id="prevButton">Previous</button>
+                <span class="pagination-info" id="paginationInfo">Page 1 of 3</span>
+                <button class="pagination-button" id="nextButton">Next</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <h3>OpenStudent</h3>
+                    <p>A free, student-powered archive of academic projects and research papers. We believe knowledge should be accessible to all.</p>
+                    <div class="social-links">
+                        <a href="#" aria-label="GitHub">📂</a>
+                        <a href="#" aria-label="Twitter">🐦</a>
+                        <a href="#" aria-label="LinkedIn">🔗</a>
+                    </div>
+                </div>
+
+                <div class="footer-col">
+                    <h3>Quick Links</h3>
+                    <ul class="footer-links">
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="projects.html">Projects</a></li>
+                        <li><a href="blog.html">Blog</a></li>
+                        <li><a href="submit.html">Contribute</a></li>
+                        <li><a href="#">FAQ</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h3>Resources</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">Submission Guidelines</a></li>
+                        <li><a href="#">Citation Guide</a></li>
+                        <li><a href="#">Academic Integrity</a></li>
+                        <li><a href="#">For Educators</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h3>Contact Us</h3>
+                    <ul class="footer-links">
+                        <li><a href="mailto:contact@openstudent.org">contact@openstudent.org</a></li>
+                        <li><a href="#">Report an Issue</a></li>
+                        <li><a href="#">Partnership Inquiries</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="copyright">
+                <p>&copy; 2023 OpenStudent. This work is licensed under a <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank">Creative Commons Attribution 4.0 International License</a>.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // Mobile menu toggle
+        document.getElementById('mobileMenuBtn').addEventListener('click', function() {
+            const nav = document.getElementById('mainNav');
+            nav.classList.toggle('active');
+        });
+
+        // Tab filtering functionality
+        const tabs = document.querySelectorAll('.tab');
+        const projectCards = document.querySelectorAll('.project-card');
+        const emptyState = document.getElementById('emptyState');
+        const projectsGrid = document.getElementById('projectsGrid');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Update active tab
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+
+                // Filter projects
+                filterProjects();
+            });
+        });
+
+        // Search functionality
+        const searchInput = document.getElementById('searchInput');
+        searchInput.addEventListener('input', filterProjects);
+
+        function filterProjects() {
+            const activeCategory = document.querySelector('.tab.active').dataset.category;
+            const searchTerm = searchInput.value.toLowerCase();
+            let visibleCount = 0;
+
+            projectCards.forEach(card => {
+                const categories = card.dataset.categories.split(',');
+                const searchContent = card.dataset.search.toLowerCase();
+
+                const categoryMatch = activeCategory === 'all' || categories.includes(activeCategory);
+                const searchMatch = searchTerm === '' || searchContent.includes(searchTerm);
+
+                if (categoryMatch && searchMatch) {
+                    card.style.display = 'flex';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            // Show empty state if no projects match
+            if (visibleCount === 0) {
+                emptyState.style.display = 'block';
+                projectsGrid.style.display = 'none';
+            } else {
+                emptyState.style.display = 'none';
+                projectsGrid.style.display = 'grid';
+            }
+
+            // Update pagination info (simplified for demo)
+            document.getElementById('paginationInfo').textContent = `Showing ${visibleCount} projects`;
+        }
+
+        // Pagination functionality (simplified for demo)
+        const prevButton = document.getElementById('prevButton');
+        const nextButton = document.getElementById('nextButton');
+
+        prevButton.addEventListener('click', () => {
+            alert('Previous page functionality would be implemented with Supabase data fetching');
+        });
+
+        nextButton.addEventListener('click', () => {
+            alert('Next page functionality would be implemented with Supabase data fetching');
+        });
+
+        // TODO: Initialize Supabase client and fetch real data
+        /*
+        // Supabase initialization
+        const supabaseUrl = 'YOUR_SUPABASE_URL';
+        const supabaseKey = 'YOUR_SUPABASE_ANON_KEY';
+        const supabase = createClient(supabaseUrl, supabaseKey);
+
+        // Fetch projects from Supabase
+        async function fetchProjects(page = 1, limit = 6, category = 'all', search = '') {
+            let query = supabase
+                .from('projects')
+                .select('*', { count: 'exact' });
+
+            if (category !== 'all') {
+                query = query.contains('categories', [category]);
+            }
+
+            if (search) {
+                query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%,course.ilike.%${search}%`);
+            }
+
+            const from = (page - 1) * limit;
+            const to = from + limit - 1;
+
+            query = query.range(from, to).order('created_at', { ascending: false });
+
+            const { data, error, count } = await query;
+
+            if (error) {
+                console.error('Error fetching projects:', error);
+                return { data: [], count: 0 };
+            }
+
+            return { data, count };
+        }
+
+        // Render projects from Supabase data
+        function renderProjects(projects) {
+            const grid = document.getElementById('projectsGrid');
+            grid.innerHTML = '';
+
+            if (projects.length === 0) {
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            projects.forEach(project => {
+                const card = document.createElement('div');
+                card.className = 'project-card';
+                card.dataset.categories = project.categories.join(',');
+                card.dataset.search = `${project.title} ${project.course} ${project.semester} ${project.tools.join(' ')}`.toLowerCase();
+
+                card.innerHTML = `
+                    <div class="project-image">
+                        <img src="${project.thumbnail_url}" alt="${project.title}">
+                    </div>
+                    <div class="project-content">
+                        <div class="project-meta">
+                            <span>${project.course}</span>
+                            <span>${project.semester}</span>
+                        </div>
+                        <h3 class="project-title">${project.title}</h3>
+                        <div class="project-tools">
+                            ${project.tools.map(tool => `<span class="tool-tag">${tool}</span>`).join('')}
+                        </div>
+                        <p class="project-description">${project.description}</p>
+                        <div class="project-actions">
+                            <a href="${project.project_url}" class="btn btn-outline">View Project</a>
+                        </div>
+                    </div>
+                `;
+
+                grid.appendChild(card);
+            });
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', async () => {
+            const { data: initialProjects, count } = await fetchProjects();
+            renderProjects(initialProjects);
+
+            // Set up pagination based on total count
+            setupPagination(count);
+        });
+        */
+    </script>
+</body>
+</html>
