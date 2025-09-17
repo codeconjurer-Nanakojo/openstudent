@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Projects - OpenStudent Admin</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #64748b;
+            --light: #f8fafc;
+            --dark: #1e293b;
+            --accent: #f59e0b;
+            --border-radius: 8px;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            background-color: #f8fafc;
+        }
+
+        .admin-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 250px;
+            background-color: var(--dark);
+            color: white;
+            padding: 1.5rem 0;
+        }
+
+        .sidebar-header {
+            padding: 0 1.5rem 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-header h1 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-header span {
+            color: var(--accent);
+        }
+
+        .sidebar-nav {
+            list-style: none;
+            margin-top: 1.5rem;
+        }
+
+        .sidebar-nav li {
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-nav a {
+            display: block;
+            padding: 0.75rem 1.5rem;
+            color: #cbd5e1;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .sidebar-nav a:hover,
+        .sidebar-nav a.active {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        /* Main Content Styles */
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 1.8rem;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary);
+        }
+
+        .btn-secondary:hover {
+            background-color: #475569;
+        }
+
+        .btn-danger {
+            background-color: #dc2626;
+        }
+
+        .btn-danger:hover {
+            background-color: #b91c1c;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 0.875rem;
+        }
+
+        /* Projects Table */
+        .projects-table-container {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            overflow-x: auto;
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .search-box {
+            position: relative;
+            width: 300px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 15px;
+            padding-left: 40px;
+            border: 1px solid #e2e8f0;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--secondary);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        th {
+            font-weight: 600;
+            background-color: #f8fafc;
+        }
+
+        tr:hover {
+            background-color: #f1f5f9;
+        }
+
+        .category-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            background-color: #e0f2fe;
+            color: var(--primary);
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .actions-cell {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            border-radius: var(--border-radius);
+            width: 100%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 2rem;
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--secondary);
+        }
+
+        .modal-title {
+            margin-bottom: 1.5rem;
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        input[type="text"],
+        input[type="url"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #e2e8f0;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        input[type="text"]:focus,
+        input[type="url"]:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .form-hint {
+            font-size: 0.85rem;
+            color: var(--secondary);
+            margin-top: 0.5rem;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        /* Confirmation Dialog */
+        .confirmation-dialog {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dialog-content {
+            background-color: white;
+            border-radius: var(--border-radius);
+            width: 100%;
+            max-width: 400px;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .dialog-title {
+            margin-bottom: 1rem;
+        }
+
+        .dialog-message {
+            margin-bottom: 2rem;
+            color: var(--secondary);
+        }
+
+        .dialog-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            color: #cbd5e1;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state-title {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--dark);
+        }
+
+        .empty-state-text {
+            color: var(--secondary);
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .admin-container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                padding: 1rem;
+            }
+
+            .table-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .search-box {
+                width: 100%;
+            }
+
+            th, td {
+                padding: 0.75rem 0.5rem;
+            }
+
+            .actions-cell {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1>Open<span>Student</span></h1>
+                <p>Admin Panel</p>
+            </div>
+
+            <ul class="sidebar-nav">
+                <li><a href="dashboard.html">Dashboard</a></li>
+                <li><a href="add_project.html">Add Project</a></li>
+                <li><a href="edit_project.html" class="active">Edit Projects</a></li>
+                <li><a href="blog_editor.html">Blog Editor</a></li>
+                <li><a href="../index.html">View Site</a></li>
+                <li><a href="#" id="logoutBtn">Logout</a></li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="page-header">
+                <h2 class="page-title">Edit Projects</h2>
+                <a href="add_project.html" class="btn">Add New Project</a>
+            </div>
+
+            <div class="projects-table-container">
+                <div class="table-header">
+                    <h3>All Projects</h3>
+                    <div class="search-box">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" class="search-input" id="searchProjects" placeholder="Search projects...">
+                    </div>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Course</th>
+                            <th>Category</th>
+                            <th>Date Added</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="projectsTableBody">
+                        <tr>
+                            <td>University Database Management System</td>
+                            <td>CS 498</td>
+                            <td><span class="category-badge">MySQL</span></td>
+                            <td>Oct 15, 2023</td>
+                            <td class="actions-cell">
+                                <button class="btn btn-sm" onclick="openEditModal(1)">Edit</button>
+                                <button class="btn btn-sm btn-danger" onclick="confirmDelete(1)">Delete</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>E-commerce REST API</td>
+                            <td>CS 455</td>
+                            <td><span class="category-badge">MongoDB</span></td>
+                            <td>Oct 10, 2023</td>
+                            <td class="actions-cell">
+                                <button class="btn btn-sm" onclick="openEditModal(2)">Edit</button>
+                                <button class="btn btn-sm btn-danger" onclick="confirmDelete(2)">Delete</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Inventory Management System</td>
+                            <td>CS 402</td>
+                            <td><span class="category-badge">Java</span></td>
+                            <td>Oct 5, 2023</td>
+                            <td class="actions-cell">
+                                <button class="btn btn-sm" onclick="openEditModal(3)">Edit</button>
+                                <button class="btn btn-sm btn-danger" onclick="confirmDelete(3)">Delete</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Image Classification with CNN</td>
+                            <td>DATA 301</td>
+                            <td><span class="category-badge">Python</span></td>
+                            <td>Sep 28, 2023</td>
+                            <td class="actions-cell">
+                                <button class="btn btn-sm" onclick="openEditModal(4)">Edit</button>
+                                <button class="btn btn-sm btn-danger" onclick="confirmDelete(4)">Delete</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Real-time Chat Application</td>
+                            <td>CS 365</td>
+                            <td><span class="category-badge">Node.js</span></td>
+                            <td>Sep 20, 2023</td>
+                            <td class="actions-cell">
+                                <button class="btn btn-sm" onclick="openEditModal(5)">Edit</button>
+                                <button class="btn btn-sm btn-danger" onclick="confirmDelete(5)">Delete</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- Empty state (initially hidden) -->
+                <div id="emptyState" class="empty-state" style="display: none;">
+                    <div class="empty-state-icon">📁</div>
+                    <h3 class="empty-state-title">No projects found</h3>
+                    <p class="empty-state-text">No projects match your search criteria. Try a different search term.</p>
+                    <a href="add_project.html" class="btn">Add New Project</a>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Edit Project Modal -->
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeEditModal()">×</button>
+            <h3 class="modal-title">Edit Project</h3>
+
+            <form id="editProjectForm">
+                <input type="hidden" id="editProjectId">
+
+                <div class="form-group">
+                    <label for="editTitle">Project Title *</label>
+                    <input type="text" id="editTitle" name="title" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="editCourse">Course *</label>
+                    <input type="text" id="editCourse" name="course" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="editSemester">Semester *</label>
+                    <input type="text" id="editSemester" name="semester" placeholder="e.g., Fall 2023" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="editTools">Tools Used *</label>
+                    <input type="text" id="editTools" name="tools" placeholder="e.g., MySQL, Python, Flask" required>
+                    <div class="form-hint">Separate multiple tools with commas</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="editCategory">Category *</label>
+                    <select id="editCategory" name="category" required>
+                        <option value="">Select a category</option>
+                        <option value="MSSQL">MSSQL</option>
+                        <option value="MySQL">MySQL</option>
+                        <option value="MongoDB">MongoDB</option>
+                        <option value="Python">Python</option>
+                        <option value="Node.js">Node.js</option>
+                        <option value="Java">Java</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="editImageUrl">Image URL *</label>
+                    <input type="url" id="editImageUrl" name="imageUrl" placeholder="https://ik.imagekit.io/your-image.jpg" required>
+                    <div class="form-hint">URL to project image hosted on ImageKit.io</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="editFileUrl">File URL *</label>
+                    <input type="url" id="editFileUrl" name="fileUrl" placeholder="https://github.com/username/repo" required>
+                    <div class="form-hint">URL to project files hosted on GitHub</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="editDescription">Description *</label>
+                    <textarea id="editDescription" name="description" required></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn">Save Changes</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Dialog -->
+    <div class="confirmation-dialog" id="deleteDialog">
+        <div class="dialog-content">
+            <h3 class="dialog-title">Confirm Deletion</h3>
+            <p class="dialog-message">Are you sure you want to delete this project? This action cannot be undone.</p>
+            <div class="dialog-actions">
+                <button class="btn btn-danger" onclick="deleteProject()">Delete</button>
+                <button class="btn btn-secondary" onclick="closeDeleteDialog()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dummy project data - will be replaced with Supabase data
+        const projects = [
+            {
+                id: 1,
+                title: "University Database Management System",
+                course: "CS 498",
+                semester: "Fall 2023",
+                tools: "MySQL, Python, Flask",
+                category: "MySQL",
+                imageUrl: "https://ik.imagekit.io/opensstudent/tr:w-600,h-300/opensstudent/database-project.jpg",
+                fileUrl: "https://github.com/example/university-db",
+                description: "A comprehensive database system for managing student records, courses, and faculty information with a web-based interface."
+            },
+            {
+                id: 2,
+                title: "E-commerce REST API",
+                course: "CS 455",
+                semester: "Winter 2023",
+                tools: "MongoDB, Node.js, Express",
+                category: "MongoDB",
+                imageUrl: "https://ik.imagekit.io/opensstudent/tr:w-600,h-300/opensstudent/ecommerce-api.jpg",
+                fileUrl: "https://github.com/example/ecommerce-api",
+                description: "A RESTful API for an e-commerce platform with user authentication, product catalog, and order management."
+            },
+            {
+                id: 3,
+                title: "Inventory Management System",
+                course: "CS 402",
+                semester: "Spring 2023",
+                tools: "Java, MSSQL, Spring Boot",
+                category: "Java",
+                imageUrl: "https://ik.imagekit.io/opensstudent/tr:w-600,h-300/opensstudent/enterprise-app.jpg",
+                fileUrl: "https://github.com/example/inventory-system",
+                description: "An enterprise-grade inventory management system with reporting features and multi-user support."
+            },
+            {
+                id: 4,
+                title: "Image Classification with CNN",
+                course: "DATA 301",
+                semester: "Fall 2022",
+                tools: "Python, TensorFlow, Keras",
+                category: "Python",
+                imageUrl: "https://ik.imagekit.io/opensstudent/tr:w-600,h-300/opensstudent/ml-project.jpg",
+                fileUrl: "https://github.com/example/image-classification",
+                description: "A convolutional neural network for image classification trained on the CIFAR-10 dataset."
+            },
+            {
+                id: 5,
+                title: "Real-time Chat Application",
+                course: "CS 365",
+                semester: "Winter 2022",
+                tools: "Node.js, MongoDB, Socket.io",
+                category: "Node.js",
+                imageUrl: "https://ik.imagekit.io/opensstudent/tr:w-600,h-300/opensstudent/realtime-chat.jpg",
+                fileUrl: "https://github.com/example/chat-app",
+                description: "A real-time chat application with multiple rooms, user authentication, and message history."
+            }
+        ];
+
+        let projectToDelete = null;
+
+        // Open edit modal with project data
+        function openEditModal(projectId) {
+            const project = projects.find(p => p.id === projectId);
+            if (!project) return;
+
+            document.getElementById('editProjectId').value = project.id;
+            document.getElementById('editTitle').value = project.title;
+            document.getElementById('editCourse').value = project.course;
+            document.getElementById('editSemester').value = project.semester;
+            document.getElementById('editTools').value = project.tools;
+            document.getElementById('editCategory').value = project.category;
+            document.getElementById('editImageUrl').value = project.imageUrl;
+            document.getElementById('editFileUrl').value = project.fileUrl;
+            document.getElementById('editDescription').value = project.description;
+
+            document.getElementById('editModal').style.display = 'flex';
+        }
+
+        // Close edit modal
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = 'none';
+        }
+
+        // Handle edit form submission
+        document.getElementById('editProjectForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const projectId = parseInt(document.getElementById('editProjectId').value);
+            const updatedProject = {
+                title: document.getElementById('editTitle').value,
+                course: document.getElementById('editCourse').value,
+                semester: document.getElementById('editSemester').value,
+                tools: document.getElementById('editTools').value,
+                category: document.getElementById('editCategory').value,
+                imageUrl: document.getElementById('editImageUrl').value,
+                fileUrl: document.getElementById('editFileUrl').value,
+                description: document.getElementById('editDescription').value
+            };
+
+            // TODO: Replace with Supabase update logic
+            /*
+            async function updateProject() {
+                const { data, error } = await supabase
+                    .from('projects')
+                    .update(updatedProject)
+                    .eq('id', projectId)
+                    .select();
+
+                if (error) {
+                    console.error('Error updating project:', error.message);
+                    // Show error message to user
+                    return;
+                }
+
+                // Close modal and refresh project list
+                closeEditModal();
+                loadProjects(); // Refresh the project list
+            }
+
+            updateProject();
+            */
+
+            // For now, just log the update and close the modal
+            console.log('Updating project:', projectId, updatedProject);
+            closeEditModal();
+            alert('Project updated successfully! (This will be connected to Supabase)');
+        });
+
+        // Confirm project deletion
+        function confirmDelete(projectId) {
+            projectToDelete = projectId;
+            document.getElementById('deleteDialog').style.display = 'flex';
+        }
+
+        // Close delete confirmation dialog
+        function closeDeleteDialog() {
+            projectToDelete = null;
+            document.getElementById('deleteDialog').style.display = 'none';
+        }
+
+        // Delete project
+        function deleteProject() {
+            if (!projectToDelete) return;
+
+            // TODO: Replace with Supabase delete logic
+            /*
+            async function deleteProjectFromDB() {
+                const { error } = await supabase
+                    .from('projects')
+                    .delete()
+                    .eq('id', projectToDelete);
+
+                if (error) {
+                    console.error('Error deleting project:', error.message);
+                    // Show error message to user
+                    return;
+                }
+
+                // Close dialog and refresh project list
+                closeDeleteDialog();
+                loadProjects(); // Refresh the project list
+            }
+
+            deleteProjectFromDB();
+            */
+
+            // For now, just log the deletion and close the dialog
+            console.log('Deleting project:', projectToDelete);
+            closeDeleteDialog();
+            alert('Project deleted successfully! (This will be connected to Supabase)');
+        }
+
+        // Search functionality
+        document.getElementById('searchProjects').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('#projectsTableBody tr');
+            let visibleCount = 0;
+
+            rows.forEach(row => {
+                const title = row.cells[0].textContent.toLowerCase();
+                const course = row.cells[1].textContent.toLowerCase();
+                const category = row.cells[2].textContent.toLowerCase();
+
+                if (title.includes(searchTerm) || course.includes(searchTerm) || category.includes(searchTerm)) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            // Show empty state if no projects match
+            const emptyState = document.getElementById('emptyState');
+            if (visibleCount === 0 && searchTerm) {
+                emptyState.style.display = 'block';
+            } else {
+                emptyState.style.display = 'none';
+            }
+        });
+
+        // TODO: Load projects from Supabase
+        /*
+        async function loadProjects() {
+            const { data, error } = await supabase
+                .from('projects')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error('Error loading projects:', error.message);
+                return;
+            }
+
+            // Render projects in the table
+            renderProjects(data);
+        }
+        */
+
+        // Logout functionality
+        document.getElementById('logoutBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            window.location.href = 'login.html';
+        });
+
+        // Close modals when clicking outside
+        window.addEventListener('click', function(e) {
+            if (e.target === document.getElementById('editModal')) {
+                closeEditModal();
+            }
+            if (e.target === document.getElementById('deleteDialog')) {
+                closeDeleteDialog();
+            }
+        });
+    </script>
+</body>
+</html>
