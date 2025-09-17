@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - OpenStudent Admin</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #64748b;
+            --light: #f8fafc;
+            --dark: #1e293b;
+            --accent: #f59e0b;
+            --border-radius: 8px;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            background-color: #f8fafc;
+        }
+
+        .admin-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 250px;
+            background-color: var(--dark);
+            color: white;
+            padding: 1.5rem 0;
+        }
+
+        .sidebar-header {
+            padding: 0 1.5rem 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-header h1 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-header span {
+            color: var(--accent);
+        }
+
+        .sidebar-nav {
+            list-style: none;
+            margin-top: 1.5rem;
+        }
+
+        .sidebar-nav li {
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-nav a {
+            display: block;
+            padding: 0.75rem 1.5rem;
+            color: #cbd5e1;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .sidebar-nav a:hover,
+        .sidebar-nav a.active {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        /* Main Content Styles */
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 1.8rem;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-dark);
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+        }
+
+        .stat-label {
+            color: var(--secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Recent Projects */
+        .recent-projects {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .project-list {
+            list-style: none;
+        }
+
+        .project-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .project-item:last-child {
+            border-bottom: none;
+        }
+
+        .project-info h3 {
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .project-meta {
+            font-size: 0.85rem;
+            color: var(--secondary);
+        }
+
+        /* Category Breakdown */
+        .category-breakdown {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+        }
+
+        .category-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .category-item:last-child {
+            border-bottom: none;
+        }
+
+        .category-name {
+            font-weight: 500;
+        }
+
+        .category-count {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .admin-container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                padding: 1rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1>Open<span>Student</span></h1>
+                <p>Admin Panel</p>
+            </div>
+
+            <ul class="sidebar-nav">
+                <li><a href="dashboard.html" class="active">Dashboard</a></li>
+                <li><a href="add_project.html">Add Project</a></li>
+                <li><a href="edit_project.html">Edit Projects</a></li>
+                <li><a href="blog_editor.html">Blog Editor</a></li>
+                <li><a href="../index.html">View Site</a></li>
+                <li><a href="#" id="logoutBtn">Logout</a></li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="page-header">
+                <h2 class="page-title">Dashboard</h2>
+                <a href="add_project.html" class="btn">Add New Project</a>
+            </div>
+
+            <!-- Stats Overview -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">42</div>
+                    <div class="stat-label">Total Projects</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-value">8</div>
+                    <div class="stat-label">Projects This Month</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-value">5</div>
+                    <div class="stat-label">Blog Posts</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-value">127</div>
+                    <div class="stat-label">Total Downloads</div>
+                </div>
+            </div>
+
+            <!-- Recent Projects -->
+            <div class="recent-projects">
+                <h3 class="section-title">Recent Projects</h3>
+
+                <ul class="project-list">
+                    <li class="project-item">
+                        <div class="project-info">
+                            <h3>University Database Management System</h3>
+                            <div class="project-meta">CS 498 • Fall 2023 • MySQL, Python</div>
+                        </div>
+                        <div class="project-date">2 days ago</div>
+                    </li>
+
+                    <li class="project-item">
+                        <div class="project-info">
+                            <h3>E-commerce REST API</h3>
+                            <div class="project-meta">CS 455 • Winter 2023 • MongoDB, Node.js</div>
+                        </div>
+                        <div class="project-date">5 days ago</div>
+                    </li>
+
+                    <li class="project-item">
+                        <div class="project-info">
+                            <h3>Inventory Management System</h3>
+                            <div class="project-meta">CS 402 • Spring 2023 • Java, MSSQL</div>
+                        </div>
+                        <div class="project-date">1 week ago</div>
+                    </li>
+
+                    <li class="project-item">
+                        <div class="project-info">
+                            <h3>Image Classification with CNN</h3>
+                            <div class="project-meta">DATA 301 • Fall 2022 • Python, TensorFlow</div>
+                        </div>
+                        <div class="project-date">2 weeks ago</div>
+                    </li>
+
+                    <li class="project-item">
+                        <div class="project-info">
+                            <h3>Real-time Chat Application</h3>
+                            <div class="project-meta">CS 365 • Winter 2022 • Node.js, MongoDB</div>
+                        </div>
+                        <div class="project-date">3 weeks ago</div>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Category Breakdown -->
+            <div class="category-breakdown">
+                <h3 class="section-title">Projects by Category</h3>
+
+                <div class="category-item">
+                    <span class="category-name">Python</span>
+                    <span class="category-count">12</span>
+                </div>
+
+                <div class="category-item">
+                    <span class="category-name">Node.js</span>
+                    <span class="category-count">8</span>
+                </div>
+
+                <div class="category-item">
+                    <span class="category-name">Java</span>
+                    <span class="category-count">7</span>
+                </div>
+
+                <div class="category-item">
+                    <span class="category-name">MySQL</span>
+                    <span class="category-count">6</span>
+                </div>
+
+                <div class="category-item">
+                    <span class="category-name">MongoDB</span>
+                    <span class="category-count">5</span>
+                </div>
+
+                <div class="category-item">
+                    <span class="category-name">MSSQL</span>
+                    <span class="category-count">4</span>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // TODO: Replace with Supabase data fetching
+        /*
+        // Example: Fetch dashboard stats from Supabase
+        async function loadDashboardData() {
+            // Total projects count
+            const { count: totalCount, error: countError } = await supabase
+                .from('projects')
+                .select('*', { count: 'exact' });
+
+            // Recent projects
+            const { data: recentProjects, error: projectsError } = await supabase
+                .from('projects')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .limit(5);
+
+            // Category breakdown
+            const { data: categoryData, error: categoryError } = await supabase
+                .from('projects')
+                .select('category');
+
+            // Process category data to get counts
+            const categoryCounts = {};
+            categoryData.forEach(project => {
+                const categories = project.category.split(',');
+                categories.forEach(cat => {
+                    cat = cat.trim();
+                    categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
+                });
+            });
+
+            // Update UI with fetched data
+            // ...
+        }
+        */
+
+        // Logout functionality
+        document.getElementById('logoutBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+
+            // TODO: Implement Supabase logout
+            /*
+            async function logout() {
+                const { error } = await supabase.auth.signOut();
+                if (error) {
+                    console.error('Logout error:', error.message);
+                    return;
+                }
+
+                // Redirect to login page
+                window.location.href = 'login.html';
+            }
+            */
+
+            // For now, just redirect
+            window.location.href = 'login.html';
+        });
+    </script>
+</body>
+</html>
