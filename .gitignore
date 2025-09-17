@@ -1,0 +1,26 @@
+# Node modules (future-proof)
+node_modules/
+
+# Build output
+dist/
+build/
+
+# Environment variables
+.env
+.env.local
+.env.production
+
+# System files
+.DS_Store
+Thumbs.db
+
+# IDE/editor configs
+.vscode/
+.idea/
+*.swp
+
+# OS-specific
+__MACOSX/
+
+#virtual en
+.venv/

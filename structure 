@@ -1,0 +1,40 @@
+openstudent/
+│
+├── index.html                  # Landing page (public)
+├── dashboard.html              # Authenticated user dashboard
+├── upload.html                 # Document upload interface
+├── search.html                 # Full-text search interface
+│
+├── assets/
+│   ├── css/
+│   │   ├── base.css            # Global styles (reset, typography)
+│   │   ├── auth.css            # Login/signup styles
+│   │   ├── dashboard.css       # Dashboard-specific styles
+│   │   ├── upload.css          # Upload form styles
+│   │   └── search.css          # Search results styling
+│   │
+│   ├── js/
+│   │   ├── config.js           # Supabase + ImageKit keys (non-sensitive public config)
+│   │   ├── auth.js             # Sign-up, sign-in, sign-out, auth state listener
+│   │   ├── storage.js          # File upload + metadata insert
+│   │   ├── search.js           # FTS logic and rendering
+│   │   ├── ui.js               # DOM manipulation helpers (show/hide, alerts, etc.)
+│   │   └── imagekit.js         # Thumbnail generation and transformations
+│   │
+│   └── img/
+│       └── logo.svg            # Static assets (fallbacks, logos, etc.)
+│
+├── supabase/
+│   ├── schema.sql              # Table definitions
+│   ├── policies.sql            # RLS policies
+│   └── seed.sql                # Optional seed data for dev
+│
+├── docs/                       # Project documentation
+│   ├── README.md               # Overview and setup
+│   ├── architecture.md         # System design and NFRs
+│   ├── onboarding.md           # Contributor guide
+│   └── roadmap.md              # Feature roadmap
+│
+└── .github/
+    └── workflows/
+        └── deploy.yml          # GitHub Pages CI/CD (optional)
