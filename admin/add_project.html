@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Project - OpenStudent Admin</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #64748b;
+            --light: #f8fafc;
+            --dark: #1e293b;
+            --accent: #f59e0b;
+            --border-radius: 8px;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            background-color: #f8fafc;
+        }
+
+        .admin-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 250px;
+            background-color: var(--dark);
+            color: white;
+            padding: 1.5rem 0;
+        }
+
+        .sidebar-header {
+            padding: 0 1.5rem 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-header h1 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-header span {
+            color: var(--accent);
+        }
+
+        .sidebar-nav {
+            list-style: none;
+            margin-top: 1.5rem;
+        }
+
+        .sidebar-nav li {
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-nav a {
+            display: block;
+            padding: 0.75rem 1.5rem;
+            color: #cbd5e1;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .sidebar-nav a:hover,
+        .sidebar-nav a.active {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        /* Main Content Styles */
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 1.8rem;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary);
+        }
+
+        .btn-secondary:hover {
+            background-color: #475569;
+        }
+
+        /* Form Styles */
+        .form-container {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            box-shadow: var(--shadow);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        input[type="text"],
+        input[type="url"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #e2e8f0;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        input[type="text"]:focus,
+        input[type="url"]:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .form-hint {
+            font-size: 0.85rem;
+            color: var(--secondary);
+            margin-top: 0.5rem;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .error-message {
+            color: #e53e3e;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            display: none;
+        }
+
+        .success-message {
+            background-color: #f0fdf4;
+            color: #15803d;
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 1.5rem;
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .admin-container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                padding: 1rem;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1>Open<span>Student</span></h1>
+                <p>Admin Panel</p>
+            </div>
+
+            <ul class="sidebar-nav">
+                <li><a href="dashboard.html">Dashboard</a></li>
+                <li><a href="add_project.html" class="active">Add Project</a></li>
+                <li><a href="edit_project.html">Edit Projects</a></li>
+                <li><a href="blog_editor.html">Blog Editor</a></li>
+                <li><a href="../index.html">View Site</a></li>
+                <li><a href="#" id="logoutBtn">Logout</a></li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="page-header">
+                <h2 class="page-title">Add New Project</h2>
+                <a href="dashboard.html" class="btn btn-secondary">Back to Dashboard</a>
+            </div>
+
+            <div id="successMessage" class="success-message">
+                Project added successfully!
+            </div>
+
+            <div class="form-container">
+                <form id="projectForm">
+                    <div class="form-group">
+                        <label for="title">Project Title *</label>
+                        <input type="text" id="title" name="title" required>
+                        <div id="titleError" class="error-message">Please enter a project title</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="course">Course *</label>
+                        <input type="text" id="course" name="course" required>
+                        <div id="courseError" class="error-message">Please enter a course code</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="semester">Semester *</label>
+                        <input type="text" id="semester" name="semester" placeholder="e.g., Fall 2023" required>
+                        <div id="semesterError" class="error-message">Please enter a semester</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="tools">Tools Used *</label>
+                        <input type="text" id="tools" name="tools" placeholder="e.g., MySQL, Python, Flask" required>
+                        <div class="form-hint">Separate multiple tools with commas</div>
+                        <div id="toolsError" class="error-message">Please enter at least one tool</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="category">Category *</label>
+                        <select id="category" name="category" required>
+                            <option value="">Select a category</option>
+                            <option value="MSSQL">MSSQL</option>
+                            <option value="MySQL">MySQL</option>
+                            <option value="MongoDB">MongoDB</option>
+                            <option value="Python">Python</option>
+                            <option value="Node.js">Node.js</option>
+                            <option value="Java">Java</option>
+                        </select>
+                        <div id="categoryError" class="error-message">Please select a category</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="imageUrl">Image URL *</label>
+                        <input type="url" id="imageUrl" name="imageUrl" placeholder="https://ik.imagekit.io/your-image.jpg" required>
+                        <div class="form-hint">URL to project image hosted on ImageKit.io</div>
+                        <div id="imageUrlError" class="error-message">Please enter a valid ImageKit URL</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="fileUrl">File URL *</label>
+                        <input type="url" id="fileUrl" name="fileUrl" placeholder="https://github.com/username/repo" required>
+                        <div class="form-hint">URL to project files hosted on GitHub</div>
+                        <div id="fileUrlError" class="error-message">Please enter a valid GitHub URL</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Description *</label>
+                        <textarea id="description" name="description" required></textarea>
+                        <div id="descriptionError" class="error-message">Please enter a project description</div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn">Add Project</button>
+                        <button type="reset" class="btn btn-secondary">Reset Form</button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Form validation
+        document.getElementById('projectForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            let isValid = true;
+
+            // Validate title
+            const title = document.getElementById('title');
+            if (!title.value.trim()) {
+                document.getElementById('titleError').style.display = 'block';
+                isValid = false;
+            } else {
+                document.getElementById('titleError').style.display = 'none';
+            }
+
+            // Validate course
+            const course = document.getElementById('course');
+            if (!course.value.trim()) {
+                document.getElementById('courseError').style.display = 'block';
+                isValid = false;
+            } else {
+                document.getElementById('courseError').style.display = 'none';
+            }
+
+            // Validate semester
+            const semester = document.getElementById('semester');
+            if (!semester.value.trim()) {
+                document.getElementById('semesterError').style.display = 'block';
+                isValid = false;
+            } else {
+                document.getElementById('semesterError').style.display = 'none';
+            }
+
+            // Validate tools
+            const tools = document.getElementById('tools');
+            if (!tools.value.trim()) {
+                document.getElementById('toolsError').style.display = 'block';
+                isValid = false;
+            } else {
+                document.getElementById('toolsError').style.display = 'none';
+            }
+
+            // Validate category
+            const category = document.getElementById('category');
+            if (!category.value) {
+                document.getElementById('categoryError').style.display = 'block';
+                isValid = false;
+            } else {
+                document.getElementById('categoryError').style.display = 'none';
+            }
+
+            // Validate image URL
+            const imageUrl = document.getElementById('imageUrl');
+            if (!imageUrl.value.trim() || !isValidUrl(imageUrl.value)) {
+                document.getElementById('imageUrlError').style.display = 'block';
+                isValid = false;
+            } else {
+                document.getElementById('imageUrlError').style.display = 'none';
+            }
+
+            // Validate file URL
+            const fileUrl = document.getElementById('fileUrl');
+            if (!fileUrl.value.trim() || !isValidUrl(fileUrl.value)) {
+                document.getElementById('fileUrlError').style.display = 'block';
+                isValid = false;
+            } else {
+                document.getElementById('fileUrlError').style.display = 'none';
+            }
+
+            // Validate description
+            const description = document.getElementById('description');
+            if (!description.value.trim()) {
+                document.getElementById('descriptionError').style.display = 'block';
+                isValid = false;
+            } else {
+                document.getElementById('descriptionError').style.display = 'none';
+            }
+
+            if (isValid) {
+                // TODO: Replace with Supabase insert logic
+                /*
+                async function addProject() {
+                    const { data, error } = await supabase
+                        .from('projects')
+                        .insert([
+                            {
+                                title: title.value,
+                                course: course.value,
+                                semester: semester.value,
+                                tools: tools.value.split(',').map(tool => tool.trim()),
+                                category: category.value,
+                                image_url: imageUrl.value,
+                                file_url: fileUrl.value,
+                                description: description.value,
+                                created_at: new Date().toISOString(),
+                                updated_at: new Date().toISOString()
+                            }
+                        ])
+                        .select();
+
+                    if (error) {
+                        console.error('Error adding project:', error.message);
+                        // Show error message to user
+                        return;
+                    }
+
+                    // Show success message
+                    document.getElementById('successMessage').style.display = 'block';
+
+                    // Reset form
+                    document.getElementById('projectForm').reset();
+
+                    // Hide success message after 3 seconds
+                    setTimeout(() => {
+                        document.getElementById('successMessage').style.display = 'none';
+                    }, 3000);
+                }
+
+                addProject();
+                */
+
+                // For now, just show success message
+                document.getElementById('successMessage').style.display = 'block';
+
+                // Reset form
+                document.getElementById('projectForm').reset();
+
+                // Hide success message after 3 seconds
+                setTimeout(() => {
+                    document.getElementById('successMessage').style.display = 'none';
+                }, 3000);
+            }
+        });
+
+        function isValidUrl(string) {
+            try {
+                new URL(string);
+                return true;
+            } catch (_) {
+                return false;
+            }
+        }
+
+        // Logout functionality
+        document.getElementById('logoutBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            window.location.href = 'login.html';
+        });
+    </script>
+</body>
+</html>
