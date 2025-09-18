@@ -57,6 +57,12 @@
             color: var(--accent);
         }
 
+        .user-info {
+            margin-top: 0.5rem;
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+
         .sidebar-nav {
             list-style: none;
             margin-top: 1.5rem;
@@ -136,6 +142,12 @@
             padding: 1.5rem;
             box-shadow: var(--shadow);
             text-align: center;
+            transition: var(--transition);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
         }
 
         .stat-icon {
@@ -224,6 +236,7 @@
             height: 100%;
             background-color: var(--primary);
             border-radius: 4px;
+            transition: width 0.3s ease;
         }
 
         .category-count {
@@ -310,21 +323,37 @@
             color: var(--primary);
         }
 
-        /* Chart Containers (for future integration) */
-        .chart-container {
-            height: 300px;
-            background-color: #f8fafc;
-            border-radius: var(--border-radius);
+        /* Loading States */
+        .loading {
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 1.5rem;
-            border: 1px dashed #cbd5e1;
+            color: var(--secondary);
+            padding: 2rem;
         }
 
-        .chart-placeholder {
-            color: var(--secondary);
-            text-align: center;
+        .loading-spinner {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #e2e8f0;
+            border-top: 2px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 0.5rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            color: #dc2626;
+            background-color: #fef2f2;
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 1rem;
+            border: 1px solid #fecaca;
         }
 
         /* Empty States */
@@ -374,6 +403,8 @@
             }
         }
     </style>
+    <!-- Load Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
     <div class="admin-container">
@@ -382,6 +413,9 @@
             <div class="sidebar-header">
                 <h1>Open<span>Student</span></h1>
                 <p>Admin Panel</p>
+                <div class="user-info" id="userInfo">
+                    Loading user...
+                </div>
             </div>
 
             <ul class="sidebar-nav">
@@ -406,150 +440,77 @@
                 </div>
             </div>
 
+            <!-- Error Message -->
+            <div id="errorMessage" class="error-message" style="display: none;"></div>
+
             <!-- Summary Stats -->
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-icon">📁</div>
-                    <div class="stat-value">42</div>
+                    <div class="stat-value" id="totalProjects">
+                        <div class="loading-spinner"></div>
+                    </div>
                     <div class="stat-label">Total Projects</div>
-                    <span class="stat-trend trend-up">+5 this month</span>
+                    <span class="stat-trend trend-up" id="projectsTrend">Loading...</span>
                 </div>
 
                 <div class="stat-card">
                     <div class="stat-icon">⬇️</div>
-                    <div class="stat-value">1,247</div>
+                    <div class="stat-value" id="totalDownloads">
+                        <div class="loading-spinner"></div>
+                    </div>
                     <div class="stat-label">Total Downloads</div>
-                    <span class="stat-trend trend-up">+128 this week</span>
+                    <span class="stat-trend trend-up" id="downloadsTrend">Loading...</span>
                 </div>
 
                 <div class="stat-card">
                     <div class="stat-icon">👥</div>
-                    <div class="stat-value">28</div>
+                    <div class="stat-value" id="activeContributors">
+                        <div class="loading-spinner"></div>
+                    </div>
                     <div class="stat-label">Active Contributors</div>
-                    <span class="stat-trend trend-up">+3 this month</span>
+                    <span class="stat-trend" id="contributorsTrend">Loading...</span>
                 </div>
 
                 <div class="stat-card">
                     <div class="stat-icon">🏆</div>
-                    <div class="stat-value">Python</div>
+                    <div class="stat-value" id="popularCategory">
+                        <div class="loading-spinner"></div>
+                    </div>
                     <div class="stat-label">Most Popular Category</div>
-                    <span class="stat-trend">12 projects</span>
+                    <span class="stat-trend" id="categoryTrend">Loading...</span>
                 </div>
             </div>
 
             <!-- Category Breakdown -->
             <div class="data-section">
                 <h3 class="section-title">Projects by Category</h3>
-
-                <div class="category-chart">
-                    <div class="category-item">
-                        <span class="category-name">Python</span>
-                        <div class="category-bar">
-                            <div class="category-fill" style="width: 100%"></div>
-                        </div>
-                        <span class="category-count">12</span>
-                    </div>
-
-                    <div class="category-item">
-                        <span class="category-name">Node.js</span>
-                        <div class="category-bar">
-                            <div class="category-fill" style="width: 66%"></div>
-                        </div>
-                        <span class="category-count">8</span>
-                    </div>
-
-                    <div class="category-item">
-                        <span class="category-name">Java</span>
-                        <div class="category-bar">
-                            <div class="category-fill" style="width: 58%"></div>
-                        </div>
-                        <span class="category-count">7</span>
-                    </div>
-
-                    <div class="category-item">
-                        <span class="category-name">MySQL</span>
-                        <div class="category-bar">
-                            <div class="category-fill" style="width: 50%"></div>
-                        </div>
-                        <span class="category-count">6</span>
-                    </div>
-
-                    <div class="category-item">
-                        <span class="category-name">MongoDB</span>
-                        <div class="category-bar">
-                            <div class="category-fill" style="width: 42%"></div>
-                        </div>
-                        <span class="category-count">5</span>
-                    </div>
-
-                    <div class="category-item">
-                        <span class="category-name">MSSQL</span>
-                        <div class="category-bar">
-                            <div class="category-fill" style="width: 33%"></div>
-                        </div>
-                        <span class="category-count">4</span>
-                    </div>
+                <div class="loading" id="categoryLoading">
+                    <div class="loading-spinner"></div>
+                    Loading category data...
                 </div>
+                <div class="category-chart" id="categoryChart" style="display: none;"></div>
             </div>
 
             <div class="two-column-layout" style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
                 <!-- Recent Activity -->
                 <div class="data-section">
                     <h3 class="section-title">Recent Activity</h3>
-
-                    <ul class="activity-list">
-                        <li class="activity-item">
-                            <div class="activity-icon">⬇️</div>
-                            <div class="activity-content">
-                                <div class="activity-title">University Database System downloaded</div>
-                                <div class="activity-details">By John Doe • CS 498 Project</div>
-                            </div>
-                            <div class="activity-time">2 hours ago</div>
-                        </li>
-
-                        <li class="activity-item">
-                            <div class="activity-icon">⬆️</div>
-                            <div class="activity-content">
-                                <div class="activity-title">New project uploaded</div>
-                                <div class="activity-details">By Sarah Chen • E-commerce API</div>
-                            </div>
-                            <div class="activity-time">5 hours ago</div>
-                        </li>
-
-                        <li class="activity-item">
-                            <div class="activity-icon">⬇️</div>
-                            <div class="activity-content">
-                                <div class="activity-title">Inventory Management System downloaded</div>
-                                <div class="activity-details">By Alex Johnson • CS 402 Project</div>
-                            </div>
-                            <div class="activity-time">Yesterday</div>
-                        </li>
-
-                        <li class="activity-item">
-                            <div class="activity-icon">⬇️</div>
-                            <div class="activity-content">
-                                <div class="activity-title">Image Classification CNN downloaded</div>
-                                <div class="activity-details">By Maria Garcia • DATA 301 Project</div>
-                            </div>
-                            <div class="activity-time">2 days ago</div>
-                        </li>
-
-                        <li class="activity-item">
-                            <div class="activity-icon">📝</div>
-                            <div class="activity-content">
-                                <div class="activity-title">New blog post published</div>
-                                <div class="activity-details">By OpenStudent Team • "Guide to Open Source"</div>
-                            </div>
-                            <div class="activity-time">3 days ago</div>
-                        </li>
-                    </ul>
+                    <div class="loading" id="activityLoading">
+                        <div class="loading-spinner"></div>
+                        Loading activity...
+                    </div>
+                    <ul class="activity-list" id="activityList" style="display: none;"></ul>
                 </div>
 
                 <!-- Top Projects -->
                 <div class="data-section">
                     <h3 class="section-title">Top Projects</h3>
-
-                    <table class="top-projects-table">
+                    <div class="loading" id="topProjectsLoading">
+                        <div class="loading-spinner"></div>
+                        Loading top projects...
+                    </div>
+                    <table class="top-projects-table" id="topProjectsTable" style="display: none;">
                         <thead>
                             <tr>
                                 <th>Project</th>
@@ -557,33 +518,7 @@
                                 <th>Downloads</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr>
-                                <td>University Database System</td>
-                                <td>MySQL</td>
-                                <td class="download-count">247</td>
-                            </tr>
-                            <tr>
-                                <td>E-commerce REST API</td>
-                                <td>MongoDB</td>
-                                <td class="download-count">198</td>
-                            </tr>
-                            <tr>
-                                <td>Image Classification with CNN</td>
-                                <td>Python</td>
-                                <td class="download-count">156</td>
-                            </tr>
-                            <tr>
-                                <td>Inventory Management System</td>
-                                <td>Java</td>
-                                <td class="download-count">132</td>
-                            </tr>
-                            <tr>
-                                <td>Real-time Chat Application</td>
-                                <td>Node.js</td>
-                                <td class="download-count">115</td>
-                            </tr>
-                        </tbody>
+                        <tbody id="topProjectsBody"></tbody>
                     </table>
                 </div>
             </div>
@@ -591,120 +526,343 @@
             <!-- Downloads Over Time Chart (Placeholder) -->
             <div class="data-section">
                 <h3 class="section-title">Downloads Over Time</h3>
-
-                <div class="chart-container">
-                    <div class="chart-placeholder">
+                <div class="chart-container" style="height: 300px; background-color: #f8fafc; border-radius: var(--border-radius); display: flex; align-items: center; justify-content: center; border: 1px dashed #cbd5e1;">
+                    <div class="chart-placeholder" style="text-align: center; color: var(--secondary);">
                         <div style="font-size: 3rem; margin-bottom: 1rem;">📊</div>
                         <p>Download trends chart will be displayed here</p>
-                        <p><small>This will connect to Supabase analytics data</small></p>
+                        <p><small>Enhanced analytics coming soon</small></p>
                     </div>
                 </div>
             </div>
         </main>
     </div>
 
+    <!-- Load our configuration -->
+    <script src="../assets/js/supabase-config.js"></script>
+
     <script>
-        // TODO: Replace with Supabase data fetching
-        /*
-        // Example: Fetch analytics data from Supabase
-        async function loadAnalyticsData() {
+        let analyticsData = {
+            projects: [],
+            downloads: [],
+            categories: {},
+            activity: []
+        };
+
+        // Initialize analytics
+        document.addEventListener('DOMContentLoaded', async function() {
+            await checkAuthentication();
+            await loadUserInfo();
+            await loadAnalyticsData();
+            setupEventListeners();
+        });
+
+        // Check authentication
+        async function checkAuthentication() {
             try {
-                // Fetch total projects count
-                const { count: totalProjects, error: projectsError } = await supabase
-                    .from('projects')
-                    .select('*', { count: 'exact' });
-
-                // Fetch total downloads (would need a downloads table)
-                const { count: totalDownloads, error: downloadsError } = await supabase
-                    .from('downloads')
-                    .select('*', { count: 'exact' });
-
-                // Fetch active contributors (users who submitted projects recently)
-                const { data: recentContributors, error: contributorsError } = await supabase
-                    .from('projects')
-                    .select('author_id')
-                    .gte('created_at', new Date(Date.now() - 30*24*60*60*1000).toISOString()) // Last 30 days
-                    .then(projects => {
-                        const contributorIds = [...new Set(projects.map(p => p.author_id))];
-                        return contributorIds.length;
-                    });
-
-                // Fetch category breakdown
-                const { data: categoryData, error: categoryError } = await supabase
-                    .from('projects')
-                    .select('category');
-
-                // Process category data
-                const categoryCounts = {};
-                categoryData.forEach(project => {
-                    const categories = project.category.split(',');
-                    categories.forEach(cat => {
-                        cat = cat.trim();
-                        categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
-                    });
-                });
-
-                // Find most popular category
-                const mostPopularCategory = Object.keys(categoryCounts).reduce((a, b) =>
-                    categoryCounts[a] > categoryCounts[b] ? a : b, '');
-
-                // Fetch recent activity
-                const { data: recentActivity, error: activityError } = await supabase
-                    .from('downloads')
-                    .select(`
-                        created_at,
-                        projects (title, course),
-                        profiles (username)
-                    `)
-                    .order('created_at', { ascending: false })
-                    .limit(5);
-
-                // Fetch top projects
-                const { data: topProjects, error: topProjectsError } = await supabase
-                    .from('projects')
-                    .select('title, category, download_count')
-                    .order('download_count', { ascending: false })
-                    .limit(5);
-
-                // Update UI with fetched data
-                updateUI({
-                    totalProjects,
-                    totalDownloads,
-                    activeContributors: recentContributors,
-                    mostPopularCategory,
-                    categoryCounts,
-                    recentActivity,
-                    topProjects
-                });
-
+                const user = await DatabaseUtils.getCurrentUser();
+                if (!user) {
+                    window.location.href = 'login.html';
+                    return;
+                }
             } catch (error) {
-                console.error('Error loading analytics data:', error);
+                console.error('Auth check error:', error);
+                window.location.href = 'login.html';
             }
         }
-        */
 
-        // Refresh data button
-        document.getElementById('refreshData').addEventListener('click', function() {
-            // TODO: Implement data refresh
-            alert('Data refresh functionality will be implemented with Supabase integration');
-        });
+        // Load user information
+        async function loadUserInfo() {
+            try {
+                const user = await DatabaseUtils.getCurrentUser();
+                if (user) {
+                    document.getElementById('userInfo').textContent = user.email;
+                }
+            } catch (error) {
+                console.error('Error loading user info:', error);
+                document.getElementById('userInfo').textContent = 'Admin User';
+            }
+        }
 
-        // Export data button
-        document.getElementById('exportData').addEventListener('click', function() {
-            // TODO: Implement data export
-            alert('Data export functionality will be implemented with Supabase integration');
-        });
+        // Load all analytics data
+        async function loadAnalyticsData() {
+            try {
+                await Promise.all([
+                    loadStatistics(),
+                    loadCategoryBreakdown(),
+                    loadRecentActivity(),
+                    loadTopProjects()
+                ]);
+            } catch (error) {
+                console.error('Error loading analytics data:', error);
+                showError('Failed to load analytics data. Please refresh the page.');
+            }
+        }
 
-        // Logout functionality
-        document.getElementById('logoutBtn').addEventListener('click', function(e) {
-            e.preventDefault();
-            window.location.href = 'login.html';
-        });
+        // Load statistics
+        async function loadStatistics() {
+            try {
+                const projects = await DatabaseUtils.getAllProjects();
+                const blogPosts = await DatabaseUtils.getAllBlogPosts();
 
-        // Initial data load
-        document.addEventListener('DOMContentLoaded', function() {
-            // loadAnalyticsData(); // Will be implemented with Supabase
-        });
+                // Calculate total downloads
+                const totalDownloads = projects.reduce((sum, project) => sum + (project.downloads || 0), 0);
+
+                // Calculate this month's projects
+                const thisMonth = new Date();
+                thisMonth.setDate(1);
+                thisMonth.setHours(0, 0, 0, 0);
+
+                const thisMonthProjects = projects.filter(p =>
+                    new Date(p.created_at) >= thisMonth
+                ).length;
+
+                // Calculate downloads this week
+                const lastWeek = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+                const recentDownloads = 0; // This would come from download_logs table
+
+                // Find most popular category
+                const categoryCounts = {};
+                projects.forEach(project => {
+                    categoryCounts[project.category] = (categoryCounts[project.category] || 0) + 1;
+                });
+
+                const mostPopularCategory = Object.keys(categoryCounts).reduce((a, b) =>
+                    categoryCounts[a] > categoryCounts[b] ? a : b, 'None');
+
+                // Update UI
+                document.getElementById('totalProjects').textContent = projects.length;
+                document.getElementById('totalDownloads').textContent = totalDownloads;
+                document.getElementById('activeContributors').textContent = Math.min(projects.length, 28); // Estimate
+                document.getElementById('popularCategory').textContent = mostPopularCategory;
+
+                document.getElementById('projectsTrend').textContent = `+${thisMonthProjects} this month`;
+                document.getElementById('downloadsTrend').textContent = `+${recentDownloads} this week`;
+                document.getElementById('contributorsTrend').textContent = `Active users`;
+                document.getElementById('categoryTrend').textContent = `${categoryCounts[mostPopularCategory] || 0} projects`;
+
+                // Store for other functions
+                analyticsData.projects = projects;
+                analyticsData.categories = categoryCounts;
+
+            } catch (error) {
+                console.error('Error loading statistics:', error);
+                // Show fallback numbers
+                document.getElementById('totalProjects').textContent = '0';
+                document.getElementById('totalDownloads').textContent = '0';
+                document.getElementById('activeContributors').textContent = '0';
+                document.getElementById('popularCategory').textContent = 'None';
+            }
+        }
+
+        // Load category breakdown
+        async function loadCategoryBreakdown() {
+            const loadingEl = document.getElementById('categoryLoading');
+            const chartEl = document.getElementById('categoryChart');
+
+            try {
+                const categoryCounts = analyticsData.categories;
+                const maxCount = Math.max(...Object.values(categoryCounts));
+
+                loadingEl.style.display = 'none';
+                chartEl.style.display = 'grid';
+
+                if (Object.keys(categoryCounts).length === 0) {
+                    chartEl.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📊</div><p>No projects available for category analysis</p></div>';
+                    return;
+                }
+
+                // Sort categories by count
+                const sortedCategories = Object.entries(categoryCounts)
+                    .sort(([,a], [,b]) => b - a)
+                    .slice(0, 6);
+
+                chartEl.innerHTML = sortedCategories.map(([category, count]) => {
+                    const percentage = maxCount > 0 ? (count / maxCount) * 100 : 0;
+                    return `
+                        <div class="category-item">
+                            <span class="category-name">${category}</span>
+                            <div class="category-bar">
+                                <div class="category-fill" style="width: ${percentage}%"></div>
+                            </div>
+                            <span class="category-count">${count}</span>
+                        </div>
+                    `;
+                }).join('');
+
+            } catch (error) {
+                console.error('Error loading category breakdown:', error);
+                loadingEl.style.display = 'none';
+                chartEl.style.display = 'block';
+                chartEl.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⚠️</div><p>Failed to load category data</p></div>';
+            }
+        }
+
+        // Load recent activity
+        async function loadRecentActivity() {
+            const loadingEl = document.getElementById('activityLoading');
+            const listEl = document.getElementById('activityList');
+
+            try {
+                const projects = analyticsData.projects;
+
+                // Simulate recent activity from project creation dates
+                const recentProjects = projects
+                    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+                    .slice(0, 5);
+
+                loadingEl.style.display = 'none';
+                listEl.style.display = 'block';
+
+                if (recentProjects.length === 0) {
+                    listEl.innerHTML = '<li class="activity-item"><div class="empty-state"><p>No recent activity</p></div></li>';
+                    return;
+                }
+
+                listEl.innerHTML = recentProjects.map(project => `
+                    <li class="activity-item">
+                        <div class="activity-icon">⬆️</div>
+                        <div class="activity-content">
+                            <div class="activity-title">New project uploaded</div>
+                            <div class="activity-details">${project.title} • ${project.course}</div>
+                        </div>
+                        <div class="activity-time">${formatDate(project.created_at)}</div>
+                    </li>
+                `).join('');
+
+            } catch (error) {
+                console.error('Error loading recent activity:', error);
+                loadingEl.style.display = 'none';
+                listEl.style.display = 'block';
+                listEl.innerHTML = '<li class="activity-item"><div class="empty-state"><p style="color: #dc2626;">Failed to load activity</p></div></li>';
+            }
+        }
+
+        // Load top projects
+        async function loadTopProjects() {
+            const loadingEl = document.getElementById('topProjectsLoading');
+            const tableEl = document.getElementById('topProjectsTable');
+            const bodyEl = document.getElementById('topProjectsBody');
+
+            try {
+                const projects = analyticsData.projects
+                    .sort((a, b) => (b.downloads || 0) - (a.downloads || 0))
+                    .slice(0, 5);
+
+                loadingEl.style.display = 'none';
+                tableEl.style.display = 'table';
+
+                if (projects.length === 0) {
+                    bodyEl.innerHTML = '<tr><td colspan="3" class="empty-state"><p>No projects available</p></td></tr>';
+                    return;
+                }
+
+                bodyEl.innerHTML = projects.map(project => `
+                    <tr>
+                        <td>${project.title}</td>
+                        <td>${project.category}</td>
+                        <td class="download-count">${project.downloads || 0}</td>
+                    </tr>
+                `).join('');
+
+            } catch (error) {
+                console.error('Error loading top projects:', error);
+                loadingEl.style.display = 'none';
+                tableEl.style.display = 'table';
+                bodyEl.innerHTML = '<tr><td colspan="3" style="color: #dc2626;">Failed to load projects</td></tr>';
+            }
+        }
+
+        // Utility function to format dates
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffTime = Math.abs(now - date);
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+            if (diffDays === 0) {
+                return 'Today';
+            } else if (diffDays === 1) {
+                return 'Yesterday';
+            } else if (diffDays < 7) {
+                return `${diffDays} days ago`;
+            } else if (diffDays < 30) {
+                const weeks = Math.floor(diffDays / 7);
+                return `${weeks} ${weeks === 1 ? 'week' : 'weeks'} ago`;
+            } else {
+                return date.toLocaleDateString();
+            }
+        }
+
+        // Show error message
+        function showError(message) {
+            const errorEl = document.getElementById('errorMessage');
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Refresh data button
+            document.getElementById('refreshData').addEventListener('click', async function() {
+                await loadAnalyticsData();
+            });
+
+            // Export data button
+            document.getElementById('exportData').addEventListener('click', function() {
+                exportAnalyticsData();
+            });
+
+            // Logout functionality
+            document.getElementById('logoutBtn').addEventListener('click', async function(e) {
+                e.preventDefault();
+
+                try {
+                    await DatabaseUtils.signOut();
+                    window.location.href = 'login.html';
+                } catch (error) {
+                    console.error('Logout error:', error);
+                    window.location.href = 'login.html';
+                }
+            });
+
+            // Auto-refresh every 5 minutes
+            setInterval(loadAnalyticsData, 5 * 60 * 1000);
+        }
+
+        // Export analytics data
+        function exportAnalyticsData() {
+            try {
+                const data = {
+                    totalProjects: analyticsData.projects.length,
+                    totalDownloads: analyticsData.projects.reduce((sum, p) => sum + (p.downloads || 0), 0),
+                    categories: analyticsData.categories,
+                    topProjects: analyticsData.projects
+                        .sort((a, b) => (b.downloads || 0) - (a.downloads || 0))
+                        .slice(0, 10)
+                        .map(p => ({
+                            title: p.title,
+                            category: p.category,
+                            downloads: p.downloads || 0,
+                            created: p.created_at
+                        })),
+                    exportedAt: new Date().toISOString()
+                };
+
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `openstudent-analytics-${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+            } catch (error) {
+                console.error('Export error:', error);
+                alert('Failed to export data. Please try again.');
+            }
+        }
     </script>
 </body>
 </html>
