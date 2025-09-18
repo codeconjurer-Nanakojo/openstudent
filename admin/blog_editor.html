@@ -114,6 +114,11 @@
             background-color: var(--primary-dark);
         }
 
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
         .btn-secondary {
             background-color: var(--secondary);
         }
@@ -155,6 +160,7 @@
         }
 
         input[type="text"],
+        select,
         textarea {
             width: 100%;
             padding: 12px 15px;
@@ -165,6 +171,7 @@
         }
 
         input[type="text"]:focus,
+        select:focus,
         textarea:focus {
             outline: none;
             border-color: var(--primary);
@@ -172,9 +179,11 @@
         }
 
         textarea {
-            min-height: 200px;
+            min-height: 400px;
             resize: vertical;
-            font-family: monospace;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
         }
 
         .form-hint {
@@ -189,7 +198,7 @@
             border-radius: var(--border-radius);
             padding: 1.5rem;
             border: 1px solid #e2e8f0;
-            height: 100%;
+            height: 500px;
             overflow-y: auto;
         }
 
@@ -266,7 +275,7 @@
             display: flex;
             flex-wrap: wrap;
             gap: 0.5rem;
-            margin-top: 0.5rem;
+            margin-bottom: 0.5rem;
         }
 
         .tag {
@@ -283,6 +292,11 @@
             margin-left: 5px;
             cursor: pointer;
             font-weight: bold;
+            color: #dc2626;
+        }
+
+        .tag-remove:hover {
+            color: #b91c1c;
         }
 
         .tags-input {
@@ -292,7 +306,8 @@
             padding: 10px;
             border: 1px solid #e2e8f0;
             border-radius: var(--border-radius);
-            margin-top: 0.5rem;
+            min-height: 45px;
+            align-items: center;
         }
 
         .tags-input input {
@@ -332,6 +347,11 @@
             border: 1px solid #fecaca;
         }
 
+        /* Loading states */
+        .loading-text {
+            display: none;
+        }
+
         @media (max-width: 768px) {
             .admin-container {
                 flex-direction: column;
@@ -347,6 +367,10 @@
             }
         }
     </style>
+    <!-- Load Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Load Marked.js for Markdown parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
     <div class="admin-container">
@@ -363,6 +387,7 @@
                 <li><a href="edit_project.html">Edit Projects</a></li>
                 <li><a href="blog_editor.html" class="active">Blog Editor</a></li>
                 <li><a href="edit_blog.html">Edit Blog Posts</a></li>
+                <li><a href="analytics.html">Analytics</a></li>
                 <li><a href="../index.html">View Site</a></li>
                 <li><a href="#" id="logoutBtn">Logout</a></li>
             </ul>
@@ -387,12 +412,23 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="postTags">Tags</label>
-                        <div class="tags-input" id="tagsInputContainer">
+                        <label for="postStatus">Status</label>
+                        <select id="postStatus" name="status">
+                            <option value="draft">Draft</option>
+                            <option value="published">Published</option>
+                        </select>
+                        <div class="form-hint">Published posts will be visible on your blog</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Tags</label>
+                        <div class="tags-container" id="tagsContainer">
                             <!-- Tags will be added here dynamically -->
+                        </div>
+                        <div class="tags-input" id="tagsInputContainer">
                             <input type="text" id="postTags" placeholder="Type a tag and press Enter" autocomplete="off">
                         </div>
-                        <div class="form-hint">Separate tags with commas or press Enter after each tag</div>
+                        <div class="form-hint">Press Enter or comma to add tags. Click × to remove tags.</div>
                     </div>
 
                     <div class="editor-layout">
@@ -415,3 +451,415 @@ Here's a simple Python function:
 ```python
 def calculate_average(grades):
     return sum(grades) / len(grades)
+
+# Usage
+grades = [85, 92, 78, 96, 88]
+average = calculate_average(grades)
+print(f"Average grade: {average}")
+```
+
+## Getting Started
+
+To contribute your own projects:
+
+1. Create your project documentation
+2. Upload your files to GitHub
+3. Submit through our platform
+4. Help other students learn!
+
+> **Tip:** Make sure your code is well-commented and includes a README file with setup instructions.
+
+Happy coding! 🚀</textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Live Preview</label>
+                            <div class="preview-pane">
+                                <div class="preview-title" id="previewTitle">Welcome to OpenStudent Blog</div>
+                                <div class="preview-content" id="previewContent">
+                                    <p>Start typing in the editor to see your content preview here...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn" id="publishBtn">
+                            <span id="publishText">Publish Post</span>
+                            <span id="publishLoading" class="loading-text">Publishing...</span>
+                        </button>
+                        <button type="button" class="btn btn-secondary" id="saveDraftBtn">
+                            <span id="draftText">Save as Draft</span>
+                            <span id="draftLoading" class="loading-text">Saving...</span>
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="resetForm()">Clear Form</button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <!-- Load our configuration -->
+    <script src="../assets/js/supabase-config.js"></script>
+
+    <script>
+        let currentTags = [];
+        let isEditing = false;
+        let editingPostId = null;
+
+        // Initialize the editor
+        document.addEventListener('DOMContentLoaded', async function() {
+            await checkAuthentication();
+            await checkForEditMode();
+            initializeEditor();
+            setupEventListeners();
+        });
+
+        // Check authentication
+        async function checkAuthentication() {
+            try {
+                const user = await DatabaseUtils.getCurrentUser();
+                if (!user) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+            } catch (error) {
+                console.error('Auth check error:', error);
+                window.location.href = 'login.html';
+            }
+        }
+
+        // Check if we're editing an existing post
+        async function checkForEditMode() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const editId = urlParams.get('edit');
+            const sessionEditId = sessionStorage.getItem('editPostId');
+
+            if (editId || sessionEditId) {
+                const postId = editId || sessionEditId;
+                await loadPostForEditing(postId);
+                sessionStorage.removeItem('editPostId');
+            }
+        }
+
+        // Load post for editing
+        async function loadPostForEditing(postId) {
+            try {
+                const post = await DatabaseUtils.getBlogPostById(postId);
+                if (post) {
+                    isEditing = true;
+                    editingPostId = postId;
+
+                    document.getElementById('postId').value = postId;
+                    document.getElementById('postTitle').value = post.title;
+                    document.getElementById('postStatus').value = post.status;
+                    document.getElementById('postContent').value = post.content;
+
+                    // Load tags
+                    if (post.tags && Array.isArray(post.tags)) {
+                        currentTags = post.tags;
+                        renderTags();
+                    }
+
+                    // Update preview
+                    updatePreview();
+
+                    // Update page title
+                    document.querySelector('.page-title').textContent = 'Edit Blog Post';
+                    document.getElementById('publishText').textContent = 'Update Post';
+                }
+            } catch (error) {
+                console.error('Error loading post for editing:', error);
+                showStatusMessage('Failed to load post for editing', 'error');
+            }
+        }
+
+        // Initialize editor functionality
+        function initializeEditor() {
+            setupTagsInput();
+            setupMarkdownPreview();
+            updatePreview(); // Initial preview
+        }
+
+        // Setup tags input functionality
+        function setupTagsInput() {
+            const tagsInput = document.getElementById('postTags');
+
+            tagsInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.key === ',') {
+                    e.preventDefault();
+                    addTag(this.value.trim());
+                    this.value = '';
+                }
+            });
+
+            tagsInput.addEventListener('blur', function() {
+                if (this.value.trim()) {
+                    addTag(this.value.trim());
+                    this.value = '';
+                }
+            });
+        }
+
+        // Add a tag
+        function addTag(tagText) {
+            if (!tagText || currentTags.includes(tagText.toLowerCase())) return;
+
+            currentTags.push(tagText.toLowerCase());
+            renderTags();
+        }
+
+        // Remove a tag
+        function removeTag(tagToRemove) {
+            currentTags = currentTags.filter(tag => tag !== tagToRemove);
+            renderTags();
+        }
+
+        // Render tags in the UI
+        function renderTags() {
+            const container = document.getElementById('tagsContainer');
+            container.innerHTML = currentTags.map(tag => `
+                <div class="tag">
+                    ${tag}
+                    <span class="tag-remove" onclick="removeTag('${tag}')">&times;</span>
+                </div>
+            `).join('');
+        }
+
+        // Setup markdown preview
+        function setupMarkdownPreview() {
+            const titleInput = document.getElementById('postTitle');
+            const contentInput = document.getElementById('postContent');
+
+            titleInput.addEventListener('input', updatePreview);
+            contentInput.addEventListener('input', updatePreview);
+        }
+
+        // Update markdown preview
+        function updatePreview() {
+            const title = document.getElementById('postTitle').value || 'Blog Post Title';
+            const content = document.getElementById('postContent').value;
+
+            document.getElementById('previewTitle').textContent = title;
+
+            if (content.trim()) {
+                try {
+                    const html = marked.parse(content);
+                    document.getElementById('previewContent').innerHTML = html;
+                } catch (error) {
+                    document.getElementById('previewContent').innerHTML = '<p style="color: #dc2626;">Error parsing markdown</p>';
+                }
+            } else {
+                document.getElementById('previewContent').innerHTML = '<p>Start typing to see preview...</p>';
+            }
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Form submission
+            document.getElementById('blogPostForm').addEventListener('submit', handleFormSubmit);
+
+            // Save draft button
+            document.getElementById('saveDraftBtn').addEventListener('click', saveDraft);
+
+            // Logout functionality
+            document.getElementById('logoutBtn').addEventListener('click', async function(e) {
+                e.preventDefault();
+
+                try {
+                    await DatabaseUtils.signOut();
+                    window.location.href = 'login.html';
+                } catch (error) {
+                    console.error('Logout error:', error);
+                    window.location.href = 'login.html';
+                }
+            });
+        }
+
+        // Handle form submission
+        async function handleFormSubmit(event) {
+            event.preventDefault();
+            await savePost('published');
+        }
+
+        // Save as draft
+        async function saveDraft() {
+            await savePost('draft');
+        }
+
+        // Save post (draft or published)
+        async function savePost(status) {
+            const isPublishing = status === 'published';
+            const btn = isPublishing ? 'publishBtn' : 'saveDraftBtn';
+            const textSpan = isPublishing ? 'publishText' : 'draftText';
+            const loadingSpan = isPublishing ? 'publishLoading' : 'draftLoading';
+
+            // Show loading state
+            setLoadingState(btn, textSpan, loadingSpan, true);
+
+            try {
+                // Get form data
+                const title = document.getElementById('postTitle').value.trim();
+                const content = document.getElementById('postContent').value.trim();
+
+                // Validation
+                if (!title) {
+                    throw new Error('Please enter a post title');
+                }
+                if (!content) {
+                    throw new Error('Please enter post content');
+                }
+
+                // Generate excerpt from content (first 150 chars)
+                const excerpt = content.replace(/[#*`]/g, '').substring(0, 150) + (content.length > 150 ? '...' : '');
+
+                const postData = {
+                    title,
+                    content,
+                    excerpt,
+                    tags: currentTags,
+                    status
+                };
+
+                // Add published_at timestamp if publishing
+                if (status === 'published' && (!isEditing || document.getElementById('postStatus').value === 'draft')) {
+                    postData.published_at = new Date().toISOString();
+                }
+
+                let result;
+                if (isEditing && editingPostId) {
+                    // Update existing post
+                    result = await DatabaseUtils.updateBlogPost(editingPostId, postData);
+                } else {
+                    // Create new post
+                    result = await DatabaseUtils.createBlogPost(postData);
+                }
+
+                if (result) {
+                    const message = isEditing ?
+                        `Post ${status === 'published' ? 'updated and published' : 'updated as draft'} successfully!` :
+                        `Post ${status === 'published' ? 'published' : 'saved as draft'} successfully!`;
+
+                    showStatusMessage(message, 'success');
+
+                    // If this was a new post, redirect to edit mode
+                    if (!isEditing && result.id) {
+                        setTimeout(() => {
+                            window.location.href = `blog_editor.html?edit=${result.id}`;
+                        }, 2000);
+                    }
+                }
+
+            } catch (error) {
+                console.error('Error saving post:', error);
+                showStatusMessage(error.message, 'error');
+            } finally {
+                // Hide loading state
+                setLoadingState(btn, textSpan, loadingSpan, false);
+            }
+        }
+
+        // Set loading state for buttons
+        function setLoadingState(btnId, textId, loadingId, loading) {
+            const btn = document.getElementById(btnId);
+            const textSpan = document.getElementById(textId);
+            const loadingSpan = document.getElementById(loadingId);
+
+            btn.disabled = loading;
+            textSpan.style.display = loading ? 'none' : 'inline';
+            loadingSpan.style.display = loading ? 'inline' : 'none';
+        }
+
+        // Show status message
+        function showStatusMessage(message, type) {
+            const statusDiv = document.getElementById('statusMessage');
+            statusDiv.textContent = message;
+            statusDiv.className = `status-message status-${type}`;
+            statusDiv.style.display = 'block';
+
+            // Auto-hide success messages
+            if (type === 'success') {
+                setTimeout(() => {
+                    statusDiv.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        // Reset form
+        function resetForm() {
+            if (confirm('Are you sure you want to clear the form? Unsaved changes will be lost.')) {
+                document.getElementById('blogPostForm').reset();
+                currentTags = [];
+                renderTags();
+                updatePreview();
+                document.getElementById('statusMessage').style.display = 'none';
+
+                // Reset editing state
+                isEditing = false;
+                editingPostId = null;
+                document.getElementById('postId').value = '';
+                document.querySelector('.page-title').textContent = 'Blog Editor';
+                document.getElementById('publishText').textContent = 'Publish Post';
+            }
+        }
+
+        // Auto-save functionality (optional)
+        let autoSaveTimeout;
+        function autoSave() {
+            clearTimeout(autoSaveTimeout);
+            autoSaveTimeout = setTimeout(() => {
+                const title = document.getElementById('postTitle').value.trim();
+                const content = document.getElementById('postContent').value.trim();
+
+                if (title || content) {
+                    const draftData = {
+                        title,
+                        content,
+                        tags: currentTags,
+                        timestamp: new Date().toISOString()
+                    };
+
+                    localStorage.setItem('blogDraft', JSON.stringify(draftData));
+                }
+            }, 3000); // Auto-save after 3 seconds of no activity
+        }
+
+        // Load draft from localStorage on page load
+        function loadDraft() {
+            if (isEditing) return; // Don't load draft if we're editing
+
+            const draft = localStorage.getItem('blogDraft');
+            if (draft) {
+                try {
+                    const draftData = JSON.parse(draft);
+                    const draftAge = new Date() - new Date(draftData.timestamp);
+
+                    // Only load drafts less than 24 hours old
+                    if (draftAge < 24 * 60 * 60 * 1000) {
+                        if (confirm('Found a recent draft. Would you like to restore it?')) {
+                            document.getElementById('postTitle').value = draftData.title || '';
+                            document.getElementById('postContent').value = draftData.content || '';
+                            currentTags = draftData.tags || [];
+                            renderTags();
+                            updatePreview();
+                        }
+                    } else {
+                        localStorage.removeItem('blogDraft');
+                    }
+                } catch (error) {
+                    console.error('Error loading draft:', error);
+                    localStorage.removeItem('blogDraft');
+                }
+            }
+        }
+
+        // Add auto-save listeners
+        ['postTitle', 'postContent'].forEach(id => {
+            document.getElementById(id).addEventListener('input', autoSave);
+        });
+
+        // Load draft on page load (after checking for edit mode)
+        setTimeout(loadDraft, 100);
+    </script>
+</body>
+</html>
