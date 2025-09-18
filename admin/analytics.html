@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics - OpenStudent Admin</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #64748b;
+            --light: #f8fafc;
+            --dark: #1e293b;
+            --accent: #f59e0b;
+            --border-radius: 8px;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            background-color: #f8fafc;
+        }
+
+        .admin-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 250px;
+            background-color: var(--dark);
+            color: white;
+            padding: 1.5rem 0;
+        }
+
+        .sidebar-header {
+            padding: 0 1.5rem 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-header h1 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-header span {
+            color: var(--accent);
+        }
+
+        .sidebar-nav {
+            list-style: none;
+            margin-top: 1.5rem;
+        }
+
+        .sidebar-nav li {
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-nav a {
+            display: block;
+            padding: 0.75rem 1.5rem;
+            color: #cbd5e1;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .sidebar-nav a:hover,
+        .sidebar-nav a.active {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        /* Main Content Styles */
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 1.8rem;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary);
+        }
+
+        .btn-secondary:hover {
+            background-color: #475569;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+
+        .stat-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+
+        .stat-value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--dark);
+        }
+
+        .stat-label {
+            color: var(--secondary);
+            font-size: 1rem;
+        }
+
+        .stat-trend {
+            display: inline-block;
+            margin-top: 0.5rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .trend-up {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+
+        .trend-down {
+            background-color: #fee2e2;
+            color: #dc2626;
+        }
+
+        /* Charts and Data Sections */
+        .data-section {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        /* Category Breakdown */
+        .category-chart {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .category-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            border-radius: var(--border-radius);
+            background-color: #f8fafc;
+        }
+
+        .category-name {
+            font-weight: 500;
+        }
+
+        .category-bar {
+            flex-grow: 1;
+            height: 8px;
+            background-color: #e2e8f0;
+            border-radius: 4px;
+            margin: 0 1rem;
+            overflow: hidden;
+        }
+
+        .category-fill {
+            height: 100%;
+            background-color: var(--primary);
+            border-radius: 4px;
+        }
+
+        .category-count {
+            font-weight: 600;
+            color: var(--primary);
+            min-width: 40px;
+            text-align: right;
+        }
+
+        /* Recent Activity */
+        .activity-list {
+            list-style: none;
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #e0f2fe;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            flex-shrink: 0;
+        }
+
+        .activity-content {
+            flex-grow: 1;
+        }
+
+        .activity-title {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .activity-details {
+            font-size: 0.85rem;
+            color: var(--secondary);
+        }
+
+        .activity-time {
+            font-size: 0.85rem;
+            color: var(--secondary);
+            white-space: nowrap;
+            margin-left: 1rem;
+        }
+
+        /* Top Projects Table */
+        .top-projects-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .top-projects-table th,
+        .top-projects-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .top-projects-table th {
+            font-weight: 600;
+            background-color: #f8fafc;
+        }
+
+        .top-projects-table tr:hover {
+            background-color: #f1f5f9;
+        }
+
+        .download-count {
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        /* Chart Containers (for future integration) */
+        .chart-container {
+            height: 300px;
+            background-color: #f8fafc;
+            border-radius: var(--border-radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            border: 1px dashed #cbd5e1;
+        }
+
+        .chart-placeholder {
+            color: var(--secondary);
+            text-align: center;
+        }
+
+        /* Empty States */
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: var(--secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #cbd5e1;
+        }
+
+        @media (max-width: 768px) {
+            .admin-container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                padding: 1rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .category-chart {
+                grid-template-columns: 1fr;
+            }
+
+            .activity-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .activity-time {
+                margin-left: 0;
+                margin-top: 0.5rem;
+            }
+
+            .top-projects-table {
+                display: block;
+                overflow-x: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1>Open<span>Student</span></h1>
+                <p>Admin Panel</p>
+            </div>
+
+            <ul class="sidebar-nav">
+                <li><a href="dashboard.html">Dashboard</a></li>
+                <li><a href="add_project.html">Add Project</a></li>
+                <li><a href="edit_project.html">Edit Projects</a></li>
+                <li><a href="blog_editor.html">Blog Editor</a></li>
+                <li><a href="edit_blog.html">Edit Blog Posts</a></li>
+                <li><a href="analytics.html" class="active">Analytics</a></li>
+                <li><a href="../index.html">View Site</a></li>
+                <li><a href="#" id="logoutBtn">Logout</a></li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="page-header">
+                <h2 class="page-title">Analytics Dashboard</h2>
+                <div>
+                    <button class="btn btn-secondary" id="refreshData">Refresh Data</button>
+                    <button class="btn" id="exportData">Export Report</button>
+                </div>
+            </div>
+
+            <!-- Summary Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">📁</div>
+                    <div class="stat-value">42</div>
+                    <div class="stat-label">Total Projects</div>
+                    <span class="stat-trend trend-up">+5 this month</span>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">⬇️</div>
+                    <div class="stat-value">1,247</div>
+                    <div class="stat-label">Total Downloads</div>
+                    <span class="stat-trend trend-up">+128 this week</span>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-value">28</div>
+                    <div class="stat-label">Active Contributors</div>
+                    <span class="stat-trend trend-up">+3 this month</span>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">🏆</div>
+                    <div class="stat-value">Python</div>
+                    <div class="stat-label">Most Popular Category</div>
+                    <span class="stat-trend">12 projects</span>
+                </div>
+            </div>
+
+            <!-- Category Breakdown -->
+            <div class="data-section">
+                <h3 class="section-title">Projects by Category</h3>
+
+                <div class="category-chart">
+                    <div class="category-item">
+                        <span class="category-name">Python</span>
+                        <div class="category-bar">
+                            <div class="category-fill" style="width: 100%"></div>
+                        </div>
+                        <span class="category-count">12</span>
+                    </div>
+
+                    <div class="category-item">
+                        <span class="category-name">Node.js</span>
+                        <div class="category-bar">
+                            <div class="category-fill" style="width: 66%"></div>
+                        </div>
+                        <span class="category-count">8</span>
+                    </div>
+
+                    <div class="category-item">
+                        <span class="category-name">Java</span>
+                        <div class="category-bar">
+                            <div class="category-fill" style="width: 58%"></div>
+                        </div>
+                        <span class="category-count">7</span>
+                    </div>
+
+                    <div class="category-item">
+                        <span class="category-name">MySQL</span>
+                        <div class="category-bar">
+                            <div class="category-fill" style="width: 50%"></div>
+                        </div>
+                        <span class="category-count">6</span>
+                    </div>
+
+                    <div class="category-item">
+                        <span class="category-name">MongoDB</span>
+                        <div class="category-bar">
+                            <div class="category-fill" style="width: 42%"></div>
+                        </div>
+                        <span class="category-count">5</span>
+                    </div>
+
+                    <div class="category-item">
+                        <span class="category-name">MSSQL</span>
+                        <div class="category-bar">
+                            <div class="category-fill" style="width: 33%"></div>
+                        </div>
+                        <span class="category-count">4</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="two-column-layout" style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                <!-- Recent Activity -->
+                <div class="data-section">
+                    <h3 class="section-title">Recent Activity</h3>
+
+                    <ul class="activity-list">
+                        <li class="activity-item">
+                            <div class="activity-icon">⬇️</div>
+                            <div class="activity-content">
+                                <div class="activity-title">University Database System downloaded</div>
+                                <div class="activity-details">By John Doe • CS 498 Project</div>
+                            </div>
+                            <div class="activity-time">2 hours ago</div>
+                        </li>
+
+                        <li class="activity-item">
+                            <div class="activity-icon">⬆️</div>
+                            <div class="activity-content">
+                                <div class="activity-title">New project uploaded</div>
+                                <div class="activity-details">By Sarah Chen • E-commerce API</div>
+                            </div>
+                            <div class="activity-time">5 hours ago</div>
+                        </li>
+
+                        <li class="activity-item">
+                            <div class="activity-icon">⬇️</div>
+                            <div class="activity-content">
+                                <div class="activity-title">Inventory Management System downloaded</div>
+                                <div class="activity-details">By Alex Johnson • CS 402 Project</div>
+                            </div>
+                            <div class="activity-time">Yesterday</div>
+                        </li>
+
+                        <li class="activity-item">
+                            <div class="activity-icon">⬇️</div>
+                            <div class="activity-content">
+                                <div class="activity-title">Image Classification CNN downloaded</div>
+                                <div class="activity-details">By Maria Garcia • DATA 301 Project</div>
+                            </div>
+                            <div class="activity-time">2 days ago</div>
+                        </li>
+
+                        <li class="activity-item">
+                            <div class="activity-icon">📝</div>
+                            <div class="activity-content">
+                                <div class="activity-title">New blog post published</div>
+                                <div class="activity-details">By OpenStudent Team • "Guide to Open Source"</div>
+                            </div>
+                            <div class="activity-time">3 days ago</div>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Top Projects -->
+                <div class="data-section">
+                    <h3 class="section-title">Top Projects</h3>
+
+                    <table class="top-projects-table">
+                        <thead>
+                            <tr>
+                                <th>Project</th>
+                                <th>Category</th>
+                                <th>Downloads</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>University Database System</td>
+                                <td>MySQL</td>
+                                <td class="download-count">247</td>
+                            </tr>
+                            <tr>
+                                <td>E-commerce REST API</td>
+                                <td>MongoDB</td>
+                                <td class="download-count">198</td>
+                            </tr>
+                            <tr>
+                                <td>Image Classification with CNN</td>
+                                <td>Python</td>
+                                <td class="download-count">156</td>
+                            </tr>
+                            <tr>
+                                <td>Inventory Management System</td>
+                                <td>Java</td>
+                                <td class="download-count">132</td>
+                            </tr>
+                            <tr>
+                                <td>Real-time Chat Application</td>
+                                <td>Node.js</td>
+                                <td class="download-count">115</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Downloads Over Time Chart (Placeholder) -->
+            <div class="data-section">
+                <h3 class="section-title">Downloads Over Time</h3>
+
+                <div class="chart-container">
+                    <div class="chart-placeholder">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">📊</div>
+                        <p>Download trends chart will be displayed here</p>
+                        <p><small>This will connect to Supabase analytics data</small></p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // TODO: Replace with Supabase data fetching
+        /*
+        // Example: Fetch analytics data from Supabase
+        async function loadAnalyticsData() {
+            try {
+                // Fetch total projects count
+                const { count: totalProjects, error: projectsError } = await supabase
+                    .from('projects')
+                    .select('*', { count: 'exact' });
+
+                // Fetch total downloads (would need a downloads table)
+                const { count: totalDownloads, error: downloadsError } = await supabase
+                    .from('downloads')
+                    .select('*', { count: 'exact' });
+
+                // Fetch active contributors (users who submitted projects recently)
+                const { data: recentContributors, error: contributorsError } = await supabase
+                    .from('projects')
+                    .select('author_id')
+                    .gte('created_at', new Date(Date.now() - 30*24*60*60*1000).toISOString()) // Last 30 days
+                    .then(projects => {
+                        const contributorIds = [...new Set(projects.map(p => p.author_id))];
+                        return contributorIds.length;
+                    });
+
+                // Fetch category breakdown
+                const { data: categoryData, error: categoryError } = await supabase
+                    .from('projects')
+                    .select('category');
+
+                // Process category data
+                const categoryCounts = {};
+                categoryData.forEach(project => {
+                    const categories = project.category.split(',');
+                    categories.forEach(cat => {
+                        cat = cat.trim();
+                        categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
+                    });
+                });
+
+                // Find most popular category
+                const mostPopularCategory = Object.keys(categoryCounts).reduce((a, b) =>
+                    categoryCounts[a] > categoryCounts[b] ? a : b, '');
+
+                // Fetch recent activity
+                const { data: recentActivity, error: activityError } = await supabase
+                    .from('downloads')
+                    .select(`
+                        created_at,
+                        projects (title, course),
+                        profiles (username)
+                    `)
+                    .order('created_at', { ascending: false })
+                    .limit(5);
+
+                // Fetch top projects
+                const { data: topProjects, error: topProjectsError } = await supabase
+                    .from('projects')
+                    .select('title, category, download_count')
+                    .order('download_count', { ascending: false })
+                    .limit(5);
+
+                // Update UI with fetched data
+                updateUI({
+                    totalProjects,
+                    totalDownloads,
+                    activeContributors: recentContributors,
+                    mostPopularCategory,
+                    categoryCounts,
+                    recentActivity,
+                    topProjects
+                });
+
+            } catch (error) {
+                console.error('Error loading analytics data:', error);
+            }
+        }
+        */
+
+        // Refresh data button
+        document.getElementById('refreshData').addEventListener('click', function() {
+            // TODO: Implement data refresh
+            alert('Data refresh functionality will be implemented with Supabase integration');
+        });
+
+        // Export data button
+        document.getElementById('exportData').addEventListener('click', function() {
+            // TODO: Implement data export
+            alert('Data export functionality will be implemented with Supabase integration');
+        });
+
+        // Logout functionality
+        document.getElementById('logoutBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            window.location.href = 'login.html';
+        });
+
+        // Initial data load
+        document.addEventListener('DOMContentLoaded', function() {
+            // loadAnalyticsData(); // Will be implemented with Supabase
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog Editor - OpenStudent Admin</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #64748b;
+            --light: #f8fafc;
+            --dark: #1e293b;
+            --accent: #f59e0b;
+            --border-radius: 8px;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            background-color: #f8fafc;
+        }
+
+        .admin-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 250px;
+            background-color: var(--dark);
+            color: white;
+            padding: 1.5rem 0;
+        }
+
+        .sidebar-header {
+            padding: 0 1.5rem 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-header h1 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-header span {
+            color: var(--accent);
+        }
+
+        .sidebar-nav {
+            list-style: none;
+            margin-top: 1.5rem;
+        }
+
+        .sidebar-nav li {
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-nav a {
+            display: block;
+            padding: 0.75rem 1.5rem;
+            color: #cbd5e1;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .sidebar-nav a:hover,
+        .sidebar-nav a.active {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        /* Main Content Styles */
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 1.8rem;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary);
+        }
+
+        .btn-secondary:hover {
+            background-color: #475569;
+        }
+
+        /* Editor Layout */
+        .editor-container {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            box-shadow: var(--shadow);
+        }
+
+        .editor-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 1024px) {
+            .editor-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #e2e8f0;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        input[type="text"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        textarea {
+            min-height: 200px;
+            resize: vertical;
+            font-family: monospace;
+        }
+
+        .form-hint {
+            font-size: 0.85rem;
+            color: var(--secondary);
+            margin-top: 0.5rem;
+        }
+
+        /* Preview Pane */
+        .preview-pane {
+            background-color: #f8fafc;
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            border: 1px solid #e2e8f0;
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        .preview-title {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--dark);
+        }
+
+        .preview-content {
+            line-height: 1.7;
+        }
+
+        .preview-content h1,
+        .preview-content h2,
+        .preview-content h3 {
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--dark);
+        }
+
+        .preview-content h1 {
+            font-size: 1.8rem;
+        }
+
+        .preview-content h2 {
+            font-size: 1.5rem;
+        }
+
+        .preview-content h3 {
+            font-size: 1.3rem;
+        }
+
+        .preview-content p {
+            margin-bottom: 1rem;
+        }
+
+        .preview-content ul,
+        .preview-content ol {
+            margin-bottom: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .preview-content code {
+            background-color: #f1f5f9;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+
+        .preview-content pre {
+            background-color: #f1f5f9;
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            overflow-x: auto;
+            margin-bottom: 1rem;
+        }
+
+        .preview-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .preview-content blockquote {
+            border-left: 4px solid var(--primary);
+            padding-left: 1rem;
+            margin-left: 0;
+            margin-bottom: 1rem;
+            color: var(--secondary);
+        }
+
+        /* Tags Input */
+        .tags-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            background-color: #e0f2fe;
+            color: var(--primary);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+        }
+
+        .tag-remove {
+            margin-left: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .tags-input {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            padding: 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: var(--border-radius);
+            margin-top: 0.5rem;
+        }
+
+        .tags-input input {
+            flex-grow: 1;
+            border: none;
+            outline: none;
+            padding: 5px;
+            min-width: 60px;
+        }
+
+        /* Form Actions */
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        /* Status Messages */
+        .status-message {
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 1.5rem;
+            display: none;
+        }
+
+        .status-success {
+            background-color: #f0fdf4;
+            color: #15803d;
+            border: 1px solid #bbf7d0;
+        }
+
+        .status-error {
+            background-color: #fef2f2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+        }
+
+        @media (max-width: 768px) {
+            .admin-container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                padding: 1rem;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1>Open<span>Student</span></h1>
+                <p>Admin Panel</p>
+            </div>
+
+            <ul class="sidebar-nav">
+                <li><a href="dashboard.html">Dashboard</a></li>
+                <li><a href="add_project.html">Add Project</a></li>
+                <li><a href="edit_project.html">Edit Projects</a></li>
+                <li><a href="blog_editor.html" class="active">Blog Editor</a></li>
+                <li><a href="edit_blog.html">Edit Blog Posts</a></li>
+                <li><a href="../index.html">View Site</a></li>
+                <li><a href="#" id="logoutBtn">Logout</a></li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="page-header">
+                <h2 class="page-title">Blog Editor</h2>
+                <a href="edit_blog.html" class="btn btn-secondary">Manage Posts</a>
+            </div>
+
+            <div id="statusMessage" class="status-message"></div>
+
+            <div class="editor-container">
+                <form id="blogPostForm">
+                    <input type="hidden" id="postId" value="">
+
+                    <div class="form-group">
+                        <label for="postTitle">Post Title *</label>
+                        <input type="text" id="postTitle" name="title" placeholder="Enter a compelling title" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="postTags">Tags</label>
+                        <div class="tags-input" id="tagsInputContainer">
+                            <!-- Tags will be added here dynamically -->
+                            <input type="text" id="postTags" placeholder="Type a tag and press Enter" autocomplete="off">
+                        </div>
+                        <div class="form-hint">Separate tags with commas or press Enter after each tag</div>
+                    </div>
+
+                    <div class="editor-layout">
+                        <div class="form-group">
+                            <label for="postContent">Content (Markdown) *</label>
+                            <textarea id="postContent" name="content" placeholder="Write your content in Markdown format..." required># Welcome to OpenStudent Blog
+
+This is a sample blog post demonstrating Markdown formatting.
+
+## Features of OpenStudent
+
+- **Free access** to academic projects
+- **Student-powered** community
+- **Open source** philosophy
+
+## Code Example
+
+Here's a simple Python function:
+
+```python
+def calculate_average(grades):
+    return sum(grades) / len(grades)

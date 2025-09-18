@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thank You - OpenStudent</title>
+    <style>
+        /* OpenStudent CSS Variables */
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #64748b;
+            --light: #f8fafc;
+            --dark: #1e293b;
+            --accent: #f59e0b;
+            --border-radius: 8px;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            background-color: #fff;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        a {
+            text-decoration: none;
+            color: var(--primary);
+            transition: var(--transition);
+        }
+
+        a:hover {
+            color: var(--primary-dark);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: var(--primary);
+            color: white;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            transition: var(--transition);
+            border: none;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+            color: white;
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-outline:hover {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary);
+        }
+
+        .btn-secondary:hover {
+            background-color: #475569;
+        }
+
+        .section {
+            padding: 80px 0;
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+        }
+
+        /* Header Styles */
+        header {
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 20px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+        }
+
+        .logo h1 {
+            font-size: 1.8rem;
+            color: var(--primary);
+        }
+
+        .logo span {
+            color: var(--accent);
+        }
+
+        .tagline {
+            font-size: 0.9rem;
+            color: var(--secondary);
+            margin-left: 10px;
+            padding-left: 10px;
+            border-left: 1px solid #ddd;
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+        }
+
+        nav ul li {
+            margin-left: 1.5rem;
+        }
+
+        nav ul li a {
+            color: var(--dark);
+            font-weight: 500;
+        }
+
+        nav ul li a:hover {
+            color: var(--primary);
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--dark);
+        }
+
+        /* Confirmation Content */
+        .confirmation-container {
+            text-align: center;
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .confirmation-icon {
+            font-size: 4rem;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            animation: bounce 1s ease infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .confirmation-title {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: var(--dark);
+        }
+
+        .confirmation-message {
+            font-size: 1.2rem;
+            color: var(--secondary);
+            margin-bottom: 2.5rem;
+            line-height: 1.6;
+        }
+
+        .next-steps {
+            background-color: #f8fafc;
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            margin: 2.5rem 0;
+            text-align: left;
+        }
+
+        .next-steps-title {
+            font-size: 1.3rem;
+            margin-bottom: 1.5rem;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+        }
+
+        .next-steps-title span {
+            margin-right: 10px;
+            font-size: 1.5rem;
+        }
+
+        .steps-list {
+            list-style: none;
+        }
+
+        .steps-list li {
+            margin-bottom: 1rem;
+            padding-left: 2rem;
+            position: relative;
+        }
+
+        .steps-list li:before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--primary);
+            font-weight: bold;
+            width: 24px;
+            height: 24px;
+            background-color: #e0f2fe;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 2.5rem;
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--dark);
+            color: white;
+            padding: 60px 0 30px;
+            margin-top: auto;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .footer-col h3 {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+        .footer-col h3:after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 40px;
+            height: 3px;
+            background-color: var(--accent);
+        }
+
+        .footer-links {
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-bottom: 10px;
+        }
+
+        .footer-links a {
+            color: #cbd5e1;
+        }
+
+        .footer-links a:hover {
+            color: white;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .social-links a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            color: white;
+            transition: var(--transition);
+        }
+
+        .social-links a:hover {
+            background-color: var(--primary);
+            transform: translateY(-3px);
+        }
+
+        .copyright {
+            text-align: center;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 768px) {
+            .header-container {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .logo {
+                margin-bottom: 1rem;
+            }
+
+            .tagline {
+                display: none;
+            }
+
+            nav ul {
+                margin-top: 1rem;
+                justify-content: center;
+            }
+
+            nav ul li {
+                margin: 0 0.75rem;
+            }
+
+            .confirmation-title {
+                font-size: 2rem;
+            }
+
+            .confirmation-message {
+                font-size: 1.1rem;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .action-buttons .btn {
+                width: 100%;
+                max-width: 300px;
+            }
+
+            .mobile-menu-btn {
+                display: block;
+                position: absolute;
+                top: 1rem;
+                right: 1rem;
+            }
+
+            nav {
+                display: none;
+            }
+
+            nav.active {
+                display: block;
+                width: 100%;
+            }
+
+            nav.active ul {
+                flex-direction: column;
+                padding: 1rem 0;
+            }
+
+            nav.active ul li {
+                margin: 0.5rem 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header Section -->
+    <header>
+        <div class="container header-container">
+            <div class="logo">
+                <a href="index.html">
+                    <h1>Open<span>Student</span></h1>
+                </a>
+                <p class="tagline">Real Projects. Open Access. Student Powered.</p>
+            </div>
+
+            <button class="mobile-menu-btn" id="mobileMenuBtn">☰</button>
+
+            <nav id="mainNav">
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="projects.html">Projects</a></li>
+                    <li><a href="blog/index.html">Blog</a></li>
+                    <li><a href="about.html">About</a></li>
+                    <li><a href="contribute.html" class="btn">Contribute</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Confirmation Section -->
+    <section class="section">
+        <div class="container">
+            <div class="confirmation-container">
+                <div class="confirmation-icon">🎉</div>
+
+                <h1 class="confirmation-title">Thank You for Your Submission!</h1>
+
+                <p class="confirmation-message">
+                    Your project has been successfully submitted to OpenStudent. Our team will review it shortly,
+                    and you'll receive a notification once it's published. Your contribution helps build a valuable
+                    resource for students everywhere.
+                </p>
+
+                <div class="next-steps">
+                    <h3 class="next-steps-title"><span>📋</span> What Happens Next?</h3>
+
+                    <ul class="steps-list">
+                        <li>Our team will review your submission within 2-3 business days</li>
+                        <li>You'll receive an email notification once your project is published</li>
+                        <li>Your project will be available for other students to explore and learn from</li>
+                        <li>You can track your submission status from your account dashboard</li>
+                    </ul>
+                </div>
+
+                <div class="action-buttons">
+                    <a href="index.html" class="btn">
+                        Return to Home
+                    </a>
+                    <a href="projects.html" class="btn btn-outline">
+                        View All Projects
+                    </a>
+                    <a href="contribute.html" class="btn btn-secondary">
+                        Submit Another Project
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <h3>OpenStudent</h3>
+                    <p>A free, student-powered archive of academic projects and research papers. We believe knowledge should be accessible to all.</p>
+                    <div class="social-links">
+                        <a href="#" aria-label="GitHub">📂</a>
+                        <a href="#" aria-label="Twitter">🐦</a>
+                        <a href="#" aria-label="LinkedIn">🔗</a>
+                    </div>
+                </div>
+
+                <div class="footer-col">
+                    <h3>Quick Links</h3>
+                    <ul class="footer-links">
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="projects.html">Projects</a></li>
+                        <li><a href="blog/index.html">Blog</a></li>
+                        <li><a href="about.html">About</a></li>
+                        <li><a href="contribute.html">Contribute</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h3>Resources</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">Submission Guidelines</a></li>
+                        <li><a href="#">License Information</a></li>
+                        <li><a href="#">FAQ</a></li>
+                        <li><a href="#">For Educators</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h3>Contact Us</h3>
+                    <ul class="footer-links">
+                        <li><a href="mailto:contact@openstudent.org">contact@openstudent.org</a></li>
+                        <li><a href="#">Report an Issue</a></li>
+                        <li><a href="#">Partnership Inquiries</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="copyright">
+                <p>&copy; 2023 OpenStudent. This work is licensed under a <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank">Creative Commons Attribution 4.0 International License</a>.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // Mobile menu toggle
+        document.getElementById('mobileMenuBtn').addEventListener('click', function() {
+            const nav = document.getElementById('mainNav');
+            nav.classList.toggle('active');
+        });
+
+        // TODO: Add any additional interactive elements if needed
+        // For example, tracking submission status or showing a countdown timer
+
+        /*
+        // Example: Check submission status if user is logged in
+        async function checkSubmissionStatus() {
+            // This would require Supabase integration
+            const { data: { user } } = await supabase.auth.getUser();
+
+            if (user) {
+                // Get the user's most recent submission
+                const { data: submission, error } = await supabase
+                    .from('projects')
+                    .select('status, title')
+                    .eq('contributor_id', user.id)
+                    .order('created_at', { ascending: false })
+                    .limit(1)
+                    .single();
+
+                if (!error && submission) {
+                    // Update the confirmation message with specific status
+                    const statusElement = document.getElementById('submissionStatus');
+                    if (statusElement) {
+                        statusElement.textContent = `Your project "${submission.title}" is currently ${submission.status}.`;
+                    }
+                }
+            }
+        }
+
+        // Run on page load if needed
+        // checkSubmissionStatus();
+        */
+    </script>
+</body>
+</html>
