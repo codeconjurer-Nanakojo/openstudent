@@ -1,0 +1,4 @@
+const supabase = supabase.createClient(
+  'https://openstudent.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhZmxkeW1wZXFpY2Vobmxlb2prIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgxMTcxMjMsImV4cCI6MjA3MzY5MzEyM30.PJbyazF2R71EkkXwefeQ0rhooOxyE5ETKcVojPrQM7Q'
+);
