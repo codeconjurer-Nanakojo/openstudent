@@ -296,6 +296,40 @@
             margin-bottom: 20px;
         }
 
+        /* Loading States */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem;
+            color: var(--secondary);
+        }
+
+        .loading-spinner {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #e2e8f0;
+            border-top: 2px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 0.5rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Error States */
+        .error-message {
+            text-align: center;
+            padding: 2rem;
+            color: #dc2626;
+            background-color: #fef2f2;
+            border-radius: var(--border-radius);
+            margin: 1rem 0;
+        }
+
         /* Footer */
         footer {
             background-color: var(--dark);
@@ -436,6 +470,10 @@
             }
         }
     </style>
+    <!-- Load Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Load ImageKit -->
+    <script src="https://unpkg.com/imagekit-javascript/dist/imagekit.min.js"></script>
 </head>
 <body>
     <!-- Header Section -->
@@ -450,10 +488,10 @@
 
             <nav id="mainNav">
                 <ul>
-                    <li><a href="#">Home</a></li>
-                    <li><a href="#projects">Projects</a></li>
-                    <li><a href="#blog">Blog</a></li>
-                    <li><a href="#about">About</a></li>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="projects.html">Projects</a></li>
+                    <li><a href="blog/index.html">Blog</a></li>
+                    <li><a href="contribute.html">Contribute</a></li>
                 </ul>
             </nav>
         </div>
@@ -464,7 +502,7 @@
         <div class="container hero-content">
             <h2>Discover Student Projects & Research</h2>
             <p>OpenStudent is a free, community-driven archive of academic work created by students worldwide. Explore projects, share knowledge, and contribute to open education.</p>
-            <a href="#projects" class="btn">Explore Projects</a>
+            <a href="projects.html" class="btn">Explore Projects</a>
         </div>
     </section>
 
@@ -472,125 +510,49 @@
     <section class="section" id="projects">
         <div class="container">
             <h2 class="section-title">Featured Projects</h2>
-            <div class="projects-grid">
-                <!-- Project 1 -->
-                <div class="project-card">
-                    <div class="project-image">
-                        <img src="https://ik.imagekit.io/opensstudent/tr:w-600,h-300/opensstudent/placeholder-project-1.jpg" alt="Machine Learning Research Project">
-                    </div>
-                    <div class="project-content">
-                        <div class="project-meta">
-                            <span>CS 498</span>
-                            <span>Fall 2023</span>
-                        </div>
-                        <h3 class="project-title">Neural Networks for Image Recognition</h3>
-                        <p class="project-description">A comparative study of different neural network architectures for computer vision tasks.</p>
-                        <a href="#" class="btn btn-outline">View Project</a>
-                    </div>
-                </div>
 
-                <!-- Project 2 -->
-                <div class="project-card">
-                    <div class="project-image">
-                        <img src="https://ik.imagekit.io/opensstudent/tr:w-600,h-300/opensstudent/placeholder-project-2.jpg" alt="Renewable Energy Research">
-                    </div>
-                    <div class="project-content">
-                        <div class="project-meta">
-                            <span>ENG 350</span>
-                            <span>Spring 2023</span>
-                        </div>
-                        <h3 class="project-title">Solar Panel Efficiency Optimization</h3>
-                        <p class="project-description">Analysis of materials and positioning strategies to maximize solar energy capture.</p>
-                        <a href="#" class="btn btn-outline">View Project</a>
-                    </div>
-                </div>
-
-                <!-- Project 3 -->
-                <div class="project-card">
-                    <div class="project-image">
-                        <img src="https://ik.imagekit.io/opensstudent/tr:w-600,h-300/opensstudent/placeholder-project-3.jpg" alt="Economic Analysis">
-                    </div>
-                    <div class="project-content">
-                        <div class="project-meta">
-                            <span>ECON 210</span>
-                            <span>Winter 2023</span>
-                        </div>
-                        <h3 class="project-title">Impact of Remote Work on Urban Economics</h3>
-                        <p class="project-description">A data-driven analysis of how remote work trends are reshaping city economies and real estate markets.</p>
-                        <a href="#" class="btn btn-outline">View Project</a>
-                    </div>
-                </div>
+            <!-- Loading State -->
+            <div class="loading" id="projectsLoading">
+                <div class="loading-spinner"></div>
+                Loading featured projects...
             </div>
 
-            <!-- TODO: Replace static projects with dynamic data from Supabase -->
-            <!--
-            <script>
-                // Example future implementation for fetching projects from Supabase
-                async function loadProjects() {
-                    const { data, error } = await supabase
-                        .from('projects')
-                        .select('*')
-                        .eq('featured', true)
-                        .limit(3)
-                        .order('created_at', { ascending: false });
+            <!-- Error State -->
+            <div class="error-message" id="projectsError" style="display: none;"></div>
 
-                    if (error) console.error('Error loading projects:', error);
-                    if (data) renderProjects(data);
-                }
-            </script>
-            -->
+            <!-- Projects Grid -->
+            <div class="projects-grid" id="projectsGrid" style="display: none;">
+                <!-- Projects will be dynamically loaded here -->
+            </div>
+
+            <div class="view-more-container" style="text-align: center; margin-top: 40px;">
+                <a href="projects.html" class="btn">View All Projects →</a>
+            </div>
         </div>
-        <div class="view-more-container" style="text-align: center; margin-top: 20px;">
-  <a href="projects.html" class="view-more-button" style="padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;">
-    View More Projects →
-  </a>
-</div>
-
     </section>
 
     <!-- Blog Preview Section -->
     <section class="section blog-preview" id="blog">
         <div class="container">
             <h2 class="section-title">From Our Blog</h2>
-            <div class="blog-grid">
-                <!-- Blog Post 1 -->
-                <div class="blog-card">
-                    <div class="blog-content">
-                        <div class="blog-date">April 15, 2023</div>
-                        <h3 class="blog-title">How Student Projects Can Impact Real-World Problems</h3>
-                        <p class="blog-excerpt">Exploring the potential for academic work to transcend the classroom and create meaningful change in communities and industries.</p>
-                        <a href="#" class="btn btn-outline">Read More</a>
-                    </div>
-                </div>
 
-                <!-- Blog Post 2 -->
-                <div class="blog-card">
-                    <div class="blog-content">
-                        <div class="blog-date">March 28, 2023</div>
-                        <h3 class="blog-title">A Guide to Open Sourcing Your Academic Work</h3>
-                        <p class="blog-excerpt">Practical advice for students who want to share their research and projects with the world while maintaining proper attribution.</p>
-                        <a href="#" class="btn btn-outline">Read More</a>
-                    </div>
-                </div>
+            <!-- Loading State -->
+            <div class="loading" id="blogLoading">
+                <div class="loading-spinner"></div>
+                Loading recent blog posts...
             </div>
 
-            <!-- TODO: Replace static blog posts with dynamic data from Supabase -->
-            <!--
-            <script>
-                // Example future implementation for fetching blog posts from Supabase
-                async function loadBlogPosts() {
-                    const { data, error } = await supabase
-                        .from('blog_posts')
-                        .select('*')
-                        .eq('published', true)
-                        .limit(2)
-                        .order('publish_date', { ascending: false });
+            <!-- Error State -->
+            <div class="error-message" id="blogError" style="display: none;"></div>
 
-                    if (error) console.error('Error loading blog posts:', error);
-                    if (data) renderBlogPosts(data);
-                }
-            </script>
-            -->
+            <!-- Blog Grid -->
+            <div class="blog-grid" id="blogGrid" style="display: none;">
+                <!-- Blog posts will be dynamically loaded here -->
+            </div>
+
+            <div class="view-more-container" style="text-align: center; margin-top: 40px;">
+                <a href="blog/index.html" class="btn">Read All Posts →</a>
+            </div>
         </div>
     </section>
 
@@ -602,20 +564,19 @@
                     <h3>OpenStudent</h3>
                     <p>A free, student-powered archive of academic projects and research papers. We believe knowledge should be accessible to all.</p>
                     <div class="social-links">
-                        <a href="#" aria-label="GitHub"><i class="fab fa-github"></i></a>
-                        <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
-                        <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                        <a href="#" aria-label="GitHub">📂</a>
+                        <a href="#" aria-label="Twitter">🐦</a>
+                        <a href="#" aria-label="LinkedIn">🔗</a>
                     </div>
                 </div>
 
                 <div class="footer-col">
                     <h3>Quick Links</h3>
                     <ul class="footer-links">
-                        <li><a href="#">Home</a></li>
-                        <li><a href="#projects">Projects</a></li>
-                        <li><a href="#blog">Blog</a></li>
-                        <li><a href="#">Contribute</a></li>
-                        <li><a href="#">FAQ</a></li>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="projects.html">Projects</a></li>
+                        <li><a href="blog/index.html">Blog</a></li>
+                        <li><a href="contribute.html">Contribute</a></li>
                     </ul>
                 </div>
 
@@ -645,31 +606,207 @@
         </div>
     </footer>
 
-    <!-- JavaScript -->
+    <!-- Load our configuration files -->
+    <script src="assets/js/supabase-config.js"></script>
+    <script src="assets/js/imagekit-config.js"></script>
+
     <script>
-        // Mobile menu toggle
-        document.getElementById('mobileMenuBtn').addEventListener('click', function() {
-            const nav = document.getElementById('mainNav');
-            nav.classList.toggle('active');
+        // Initialize the homepage
+        document.addEventListener('DOMContentLoaded', function() {
+            initializePage();
         });
 
-        // TODO: Initialize Supabase client
-        /*
-        const supabaseUrl = 'YOUR_SUPABASE_URL';
-        const supabaseKey = 'YOUR_SUPABASE_ANON_KEY';
-        const supabase = createClient(supabaseUrl, supabaseKey);
-        */
+        async function initializePage() {
+            // Load featured projects and recent blog posts
+            await Promise.all([
+                loadFeaturedProjects(),
+                loadRecentBlogPosts()
+            ]);
 
-        // TODO: Load dynamic content from Supabase
-        // document.addEventListener('DOMContentLoaded', function() {
-        //     loadProjects();
-        //     loadBlogPosts();
-        // });
+            setupEventListeners();
+        }
+
+        // Load featured projects from Supabase
+        async function loadFeaturedProjects() {
+            const loadingEl = document.getElementById('projectsLoading');
+            const errorEl = document.getElementById('projectsError');
+            const gridEl = document.getElementById('projectsGrid');
+
+            try {
+                // Fetch the 3 most recent projects or featured projects
+                const projects = await DatabaseUtils.getAllProjects();
+                const featuredProjects = projects.slice(0, 3); // Take first 3 projects
+
+                loadingEl.style.display = 'none';
+
+                if (featuredProjects.length === 0) {
+                    gridEl.innerHTML = `
+                        <div style="grid-column: 1 / -1; text-align: center; padding: 2rem;">
+                            <h3>No projects available yet</h3>
+                            <p>Be the first to <a href="contribute.html">contribute a project</a>!</p>
+                        </div>
+                    `;
+                    gridEl.style.display = 'grid';
+                    return;
+                }
+
+                // Render projects
+                gridEl.innerHTML = featuredProjects.map(project => `
+                    <div class="project-card">
+                        <div class="project-image">
+                            <img src="${generateOptimizedImageUrl(project.image_path || project.image_url)}"
+                                 alt="${escapeHtml(project.title)}"
+                                 onerror="this.src='https://via.placeholder.com/400x200?text=Project+Image'">
+                        </div>
+                        <div class="project-content">
+                            <div class="project-meta">
+                                <span>${escapeHtml(project.course)}</span>
+                                <span>${escapeHtml(project.semester)}</span>
+                            </div>
+                            <h3 class="project-title">${escapeHtml(project.title)}</h3>
+                            <p class="project-description">${escapeHtml(project.description.substring(0, 120))}${project.description.length > 120 ? '...' : ''}</p>
+                            <a href="project.html?id=${project.id}" class="btn btn-outline">View Project</a>
+                        </div>
+                    </div>
+                `).join('');
+
+                gridEl.style.display = 'grid';
+
+            } catch (error) {
+                console.error('Error loading featured projects:', error);
+                loadingEl.style.display = 'none';
+                errorEl.textContent = 'Failed to load projects. Please try refreshing the page.';
+                errorEl.style.display = 'block';
+            }
+        }
+
+        // Load recent blog posts from Supabase
+        async function loadRecentBlogPosts() {
+            const loadingEl = document.getElementById('blogLoading');
+            const errorEl = document.getElementById('blogError');
+            const gridEl = document.getElementById('blogGrid');
+
+            try {
+                // Fetch the 2 most recent published blog posts
+                const blogPosts = await DatabaseUtils.getAllBlogPosts();
+                const recentPosts = blogPosts
+                    .filter(post => post.status === 'published')
+                    .slice(0, 2);
+
+                loadingEl.style.display = 'none';
+
+                if (recentPosts.length === 0) {
+                    gridEl.innerHTML = `
+                        <div style="grid-column: 1 / -1; text-align: center; padding: 2rem;">
+                            <h3>No blog posts available yet</h3>
+                            <p>Check back soon for updates!</p>
+                        </div>
+                    `;
+                    gridEl.style.display = 'grid';
+                    return;
+                }
+
+                // Render blog posts
+                gridEl.innerHTML = recentPosts.map(post => `
+                    <div class="blog-card">
+                        <div class="blog-content">
+                            <div class="blog-date">${formatDate(post.published_at || post.created_at)}</div>
+                            <h3 class="blog-title">${escapeHtml(post.title)}</h3>
+                            <p class="blog-excerpt">${escapeHtml(post.excerpt || generateExcerpt(post.content))}</p>
+                            <a href="blog/post.html?id=${post.id}" class="btn btn-outline">Read More</a>
+                        </div>
+                    </div>
+                `).join('');
+
+                gridEl.style.display = 'grid';
+
+            } catch (error) {
+                console.error('Error loading blog posts:', error);
+                loadingEl.style.display = 'none';
+                errorEl.textContent = 'Failed to load blog posts. Please try refreshing the page.';
+                errorEl.style.display = 'block';
+            }
+        }
+
+        // Generate optimized image URL using ImageKit
+        function generateOptimizedImageUrl(imagePath) {
+            if (!imagePath) return 'https://via.placeholder.com/400x200?text=Project+Image';
+
+            // If it's already a full URL, return as is
+            if (imagePath.startsWith('http')) return imagePath;
+
+            // Use ImageKit to generate optimized URL
+            if (typeof ImageKitUtils !== 'undefined') {
+                return ImageKitUtils.generateOptimizedUrl(imagePath, [
+                    { height: "200", width: "400", crop: "maintain_ratio" },
+                    { quality: "80" },
+                    { format: "auto" }
+                ]);
+            }
+
+            // Fallback
+            return imagePath;
+        }
+
+        // Utility functions
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text || '';
+            return div.innerHTML;
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'Recently';
+
+            const date = new Date(dateString);
+            const options = {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            };
+            return date.toLocaleDateString('en-US', options);
+        }
+
+        function generateExcerpt(content) {
+            if (!content) return '';
+            // Remove markdown formatting and get first 150 chars
+            return content.replace(/[#*`]/g, '').substring(0, 150) + (content.length > 150 ? '...' : '');
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Mobile menu toggle
+            document.getElementById('mobileMenuBtn').addEventListener('click', function() {
+                const nav = document.getElementById('mainNav');
+                nav.classList.toggle('active');
+            });
+
+            // Smooth scrolling for anchor links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+            });
+        }
+
+        // Track download clicks for analytics (optional)
+        function trackProjectClick(projectId) {
+            // You could implement download tracking here
+            console.log('Project clicked:', projectId);
+        }
+
+        // Error handling for images
+        document.addEventListener('error', function(e) {
+            if (e.target.tagName === 'IMG') {
+                e.target.src = 'https://via.placeholder.com/400x200?text=Image+Not+Found';
+            }
+        }, true);
     </script>
-
-    <!-- Font Awesome for social icons (would be loaded from CDN in production) -->
-    <!--
-    <script src="https://kit.fontawesome.com/your-fontawesome-kit.js" crossorigin="anonymous"></script>
-    -->
 </body>
 </html>
