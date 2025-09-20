@@ -1,0 +1,53 @@
+openstudent/
+├── public/                    # Static HTML pages served directly
+│   ├── login.html
+│   ├── register.html
+│   ├── add_project.html
+│   ├── admin.html
+│   ├── projects.html
+│   ├── project.html
+│   ├── profile.html
+│   ├── edit_blog.html
+│   ├── analytics.html
+│   ├── categories.html
+│   └── blog/
+│       ├── index.html
+│       └── post.html
+│
+├── src/                       # Vite-managed source code
+│   ├── assets/
+│   │   ├── css/
+│   │   │   └── style.css
+│   │   ├── images/
+│   │   └── fonts/
+│   ├── js/
+│   │   ├── supabase.js
+│   │   ├── imagekit.js
+│   │   ├── admin.js
+│   │   ├── dashboard.js
+│   │   └── utils.js
+│   └── main.js                # Entry point for frontend logic
+│
+├── backend/                   # Server-side logic and integrations
+│   ├── mega/
+│   │   └── upload.js
+│   ├── paystack/
+│   │   ├── webhook.js
+│   │   └── payout.js
+│   ├── functions/
+│   │   └── imagekit-auth.js
+│   └── db/
+│       └── schema.sql
+│
+├── docs/                      # Documentation
+│   ├── README.md
+│   ├── CONTRIBUTING.md
+│   ├── ROADMAP.md
+│   └── LICENSE.md
+│
+├── .env                       # Environment variables (VITE_ prefix)
+├── .gitignore                 # Ignore sensitive and build files
+├── supabase.config.json       # Optional Supabase config
+├── vite.config.js             # Vite config
+├── package.json               # Project metadata
+└── package-lock.json          # Dependency lock file
