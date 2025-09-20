@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - OpenStudent</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #64748b;
+            --light: #f8fafc;
+            --dark: #1e293b;
+            --accent: #f59e0b;
+            --border-radius: 8px;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--light);
+            color: var(--dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: var(--shadow);
+        }
+
+        .logo {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .tagline {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            flex: 1;
+        }
+
+        .card {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            margin-bottom: 2rem;
+            transition: var(--transition);
+        }
+
+        .card:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .card-header {
+            background: var(--primary);
+            color: white;
+            padding: 1.8rem 2rem;
+        }
+
+        .card-header h2 {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-body {
+            padding: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--dark);
+        }
+
+        .input-with-icon {
+            position: relative;
+        }
+
+        .input-with-icon i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--secondary);
+        }
+
+        .input-with-icon input, .input-with-icon select {
+            padding-left: 40px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+        }
+
+        input:read-only {
+            background-color: #f5f5f5;
+            cursor: not-allowed;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            display: none;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .btn-accent {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-accent:hover {
+            background: #e57e0b;
+            transform: translateY(-2px);
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: var(--border-radius);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+
+        .alert .close {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: inherit;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+            vertical-align: middle;
+            display: none;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .footer {
+            background: var(--dark);
+            color: white;
+            text-align: center;
+            padding: 1.5rem;
+            margin-top: auto;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        .profile-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .avatar-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        .avatar-upload {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-label {
+            background: var(--accent);
+            color: white;
+            padding: 8px 16px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .file-label:hover {
+            background: #e57e0b;
+        }
+
+        .placeholder-section {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid #eee;
+        }
+
+        .placeholder-section h3 {
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+
+        .placeholder-content {
+            background: #f9f9f9;
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            border-left: 4px solid var(--accent);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .form-row {
+                flex-direction: column;
+                gap: 1.5rem;
+            }
+
+            .profile-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">
+            <i class="fas fa-graduation-cap"></i>
+            <span>OpenStudent</span>
+        </div>
+        <div class="tagline">Ghana's Academic Archive Platform</div>
+    </div>
+
+    <div class="container">
+        <div id="reminderBanner" class="alert alert-warning" style="display: none;">
+            <div>
+                <i class="fas fa-exclamation-circle"></i>
+                <span id="reminderText">Please complete your profile to unlock full contributor features.</span>
+            </div>
+            <button class="close" onclick="document.getElementById('reminderBanner').style.display = 'none'">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2>Your Profile</h2>
+                <p>Manage your account information</p>
+            </div>
+            <div class="card-body">
+                <div id="alertSuccess" class="alert alert-success" style="display: none;">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Profile updated successfully!</span>
+                    <button class="close" onclick="document.getElementById('alertSuccess').style.display = 'none'">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div id="alertError" class="alert alert-error" style="display: none;">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span id="errorText"></span>
+                    <button class="close" onclick="document.getElementById('alertError').style.display = 'none'">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <div class="avatar-container">
+                    <img id="avatarImage" class="avatar" src="https://ik.imagekit.io/default-avatar.png" alt="Profile Picture">
+                    <div class="avatar-upload">
+                        <input type="file" id="avatarUpload" class="file-input" accept="image/*">
+                        <label for="avatarUpload" class="file-label">
+                            <i class="fas fa-upload"></i> Upload Photo
+                        </label>
+                        <small>JPG, PNG or GIF - Max 5MB</small>
+                    </div>
+                </div>
+
+                <form id="profileForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="fullName">Full Name</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-user"></i>
+                                <input type="text" id="fullName" placeholder="Enter your full name" required>
+                            </div>
+                            <div class="error-message" id="nameError">Please enter your full name</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="email">Email Address</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-envelope"></i>
+                                <input type="email" id="email" readonly>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="university">University</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-university"></i>
+                                <select id="university" required>
+                                    <option value="">Select your university</option>
+                                </select>
+                            </div>
+                            <div class="error-message" id="universityError">Please select your university</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="program">Program</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-graduation-cap"></i>
+                                <select id="program" required>
+                                    <option value="">Select your program</option>
+                                </select>
+                            </div>
+                            <div class="error-message" id="programError">Please select your program</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="role">Account Role</label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-user-tag"></i>
+                            <input type="text" id="role" value="Contributor" readonly>
+                        </div>
+                    </div>
+
+                    <div class="profile-actions">
+                        <button type="submit" class="btn btn-primary" id="saveBtn">
+                            <span class="loading" id="submitLoading"></span>
+                            <span>Save Changes</span>
+                        </button>
+                        <button type="button" class="btn btn-secondary" id="logoutBtn">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Placeholder sections for future expansion -->
+                <div class="placeholder-section">
+                    <h3>Notification Preferences</h3>
+                    <div class="placeholder-content">
+                        <p>Customize how you receive notifications about your contributions and platform updates.</p>
+                        <button class="btn btn-accent" disabled>Coming Soon</button>
+                    </div>
+                </div>
+
+                <div class="placeholder-section">
+                    <h3>Security Settings</h3>
+                    <div class="placeholder-content">
+                        <p>Manage your account security with two-factor authentication and session management.</p>
+                        <button class="btn btn-accent" disabled>Coming Soon</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>&copy; 2023 OpenStudent. Connecting Ghanaian Universities.</p>
+    </div>
+
+    <script type="module">
+        // Import the supabase client and functions
+        import { getProfile, updateProfile, checkProfileCompletion, logout, uploadProfilePictureToImageKit, getUniversities, getPrograms } from '/src/js/supabase.js';
+
+        // DOM Elements
+        const profileForm = document.getElementById('profileForm');
+        const saveBtn = document.getElementById('saveBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const submitLoading = document.getElementById('submitLoading');
+        const alertSuccess = document.getElementById('alertSuccess');
+        const alertError = document.getElementById('alertError');
+        const errorText = document.getElementById('errorText');
+        const reminderBanner = document.getElementById('reminderBanner');
+        const reminderText = document.getElementById('reminderText');
+        const avatarImage = document.getElementById('avatarImage');
+        const avatarUpload = document.getElementById('avatarUpload');
+
+        // Form fields
+        const fullNameInput = document.getElementById('fullName');
+        const emailInput = document.getElementById('email');
+        const universitySelect = document.getElementById('university');
+        const programSelect = document.getElementById('program');
+        const roleInput = document.getElementById('role');
+
+        // Track reminder display
+        const PROFILE_REMINDER_KEY = 'profileReminderShown';
+        const REMINDER_FREQUENCY = 3; // Show reminder every 3rd page load
+
+        // Store current profile data
+        let currentProfile = null;
+        let avatarFile = null;
+
+        // Form validation
+        function validateForm() {
+            let isValid = true;
+            const fullName = fullNameInput.value.trim();
+            const university = universitySelect.value;
+            const program = programSelect.value;
+
+            // Reset error messages
+            document.querySelectorAll('.error-message').forEach(el => {
+                el.style.display = 'none';
+            });
+
+            // Validate full name
+            if (!fullName) {
+                document.getElementById('nameError').style.display = 'block';
+                isValid = false;
+            }
+
+            // Validate university
+            if (!university) {
+                document.getElementById('universityError').style.display = 'block';
+                isValid = false;
+            }
+
+            // Validate program
+            if (!program) {
+                document.getElementById('programError').style.display = 'block';
+                isValid = false;
+            }
+
+            return isValid;
+        }
+
+        // Check if profile is complete
+        function isProfileComplete(profile) {
+            return profile &&
+                   profile.full_name &&
+                   profile.university_id &&
+                   profile.program_id;
+        }
+
+        // Show reminder banner if needed
+        function checkAndShowReminder(profile) {
+            if (isProfileComplete(profile)) {
+                reminderBanner.style.display = 'none';
+                return;
+            }
+
+            // Check if we should show the reminder
+            let reminderCount = parseInt(localStorage.getItem(PROFILE_REMINDER_KEY) || '0');
+            reminderCount++;
+
+            if (reminderCount % REMINDER_FREQUENCY === 0) {
+                reminderBanner.style.display = 'flex';
+                reminderText.textContent = 'Please complete your profile to unlock full contributor features.';
+            }
+
+            localStorage.setItem(PROFILE_REMINDER_KEY, reminderCount.toString());
+        }
+
+        // Load universities dropdown
+        async function loadUniversities() {
+            try {
+                const result = await getUniversities();
+
+                if (result.success) {
+                    // Clear existing options
+                    universitySelect.innerHTML = '<option value="">Select your university</option>';
+
+                    // Add universities to dropdown
+                    result.data.forEach(university => {
+                        const option = document.createElement('option');
+                        option.value = university.id;
+                        option.textContent = university.name;
+                        universitySelect.appendChild(option);
+                    });
+
+                    // Set selected value if user has a university
+                    if (currentProfile && currentProfile.university_id) {
+                        universitySelect.value = currentProfile.university_id;
+                    }
+                } else {
+                    console.error('Failed to load universities:', result.message);
+                }
+            } catch (error) {
+                console.error('Error loading universities:', error);
+            }
+        }
+
+        // Load programs dropdown
+        async function loadPrograms() {
+            try {
+                const result = await getPrograms();
+
+                if (result.success) {
+                    // Clear existing options
+                    programSelect.innerHTML = '<option value="">Select your program</option>';
+
+                    // Add programs to dropdown
+                    result.data.forEach(program => {
+                        const option = document.createElement('option');
+                        option.value = program.id;
+                        option.textContent = program.name;
+                        programSelect.appendChild(option);
+                    });
+
+                    // Set selected value if user has a program
+                    if (currentProfile && currentProfile.program_id) {
+                        programSelect.value = currentProfile.program_id;
+                    }
+                } else {
+                    console.error('Failed to load programs:', result.message);
+                }
+            } catch (error) {
+                console.error('Error loading programs:', error);
+            }
+        }
+
+        // Load profile data
+        async function loadProfile() {
+            console.log('👤 Fetching profile...');
+
+            try {
+                const result = await getProfile();
+
+                if (result.success) {
+                    console.log('✅ Profile loaded', result.profile);
+                    currentProfile = result.profile;
+
+                    // Populate form fields
+                    fullNameInput.value = result.profile.full_name || '';
+                    emailInput.value = result.profile.email || '';
+                    roleInput.value = result.profile.role || 'contributor';
+
+                    // Set avatar if exists
+                    if (result.profile.profile_picture) {
+                        avatarImage.src = result.profile.profile_picture;
+                    }
+
+                    // Load dropdowns
+                    await loadUniversities();
+                    await loadPrograms();
+
+                    // Check if we need to show the reminder banner
+                    checkAndShowReminder(result.profile);
+                } else {
+                    console.log('❌ Failed to load profile:', result.message);
+                    errorText.textContent = result.message;
+                    alertError.style.display = 'flex';
+                }
+            } catch (error) {
+                console.error('💥 Unexpected error loading profile:', error);
+                errorText.textContent = 'Failed to load profile. Please try again.';
+                alertError.style.display = 'flex';
+            }
+        }
+
+        // Handle avatar upload
+        avatarUpload.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // Validate file size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                errorText.textContent = 'File size must be less than 5MB';
+                alertError.style.display = 'flex';
+                return;
+            }
+
+            // Validate file type
+            if (!file.type.match('image.*')) {
+                errorText.textContent = 'Please select an image file';
+                alertError.style.display = 'flex';
+                return;
+            }
+
+            // Store file for later upload
+            avatarFile = file;
+
+            // Preview image
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                avatarImage.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // Handle form submission
+        profileForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (!validateForm()) return;
+
+            // Show loading state
+            saveBtn.disabled = true;
+            submitLoading.style.display = 'inline-block';
+            alertError.style.display = 'none';
+
+            const fullName = fullNameInput.value.trim();
+            const universityId = universitySelect.value;
+            const programId = programSelect.value;
+
+            try {
+                // First upload avatar if selected
+                let profilePictureUrl = currentProfile?.profile_picture;
+                if (avatarFile) {
+                    console.log('📤 Uploading profile picture...');
+                    const uploadResult = await uploadProfilePictureToImageKit(avatarFile);
+
+                    if (uploadResult.success) {
+                        profilePictureUrl = uploadResult.url;
+                        console.log('✅ Profile picture uploaded:', profilePictureUrl);
+                    } else {
+                        console.log('❌ Profile picture upload failed:', uploadResult.message);
+                        // Continue with profile update even if avatar upload fails
+                    }
+                }
+
+                // Update profile
+                console.log('💾 Saving profile...');
+                const updateData = {
+                    full_name: fullName,
+                    university_id: universityId,
+                    program_id: programId
+                };
+
+                // Only include profile_picture if we have a new URL
+                if (profilePictureUrl) {
+                    updateData.profile_picture = profilePictureUrl;
+                }
+
+                const result = await updateProfile(updateData);
+
+                if (result.success) {
+                    console.log('✅ Profile updated');
+                    currentProfile = result.profile;
+
+                    // Clear avatar file
+                    avatarFile = null;
+
+                    // Show success message
+                    alertSuccess.style.display = 'flex';
+
+                    // Hide reminder banner if profile is now complete
+                    if (isProfileComplete(result.profile)) {
+                        reminderBanner.style.display = 'none';
+                    }
+                } else {
+                    console.log('❌ Profile update failed:', result.message);
+                    errorText.textContent = result.message;
+                    alertError.style.display = 'flex';
+                }
+            } catch (error) {
+                console.error('💥 Unexpected error updating profile:', error);
+                errorText.textContent = 'Failed to update profile. Please try again.';
+                alertError.style.display = 'flex';
+            } finally {
+                // Reset loading state
+                saveBtn.disabled = false;
+                submitLoading.style.display = 'none';
+            }
+        });
+
+        // Handle logout
+        logoutBtn.addEventListener('click', async () => {
+            try {
+                const result = await logout();
+
+                if (result.success) {
+                    // Clear any stored profile data
+                    localStorage.removeItem('userProfile');
+                    localStorage.removeItem(PROFILE_REMINDER_KEY);
+
+                    // Redirect to login page
+                    window.location.href = 'login.html';
+                } else {
+                    errorText.textContent = result.message;
+                    alertError.style.display = 'flex';
+                }
+            } catch (error) {
+                console.error('💥 Logout error:', error);
+                errorText.textContent = 'Failed to logout. Please try again.';
+                alertError.style.display = 'flex';
+            }
+        });
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', () => {
+            loadProfile();
+        });
+    </script>
+</body>
+</html>

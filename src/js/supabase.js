@@ -1,961 +1,526 @@
+import { createClient } from '@supabase/supabase-js'
+
+// Initialize Supabase client
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+
+// Validate environment variables
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('❌ Missing Supabase environment variables')
+  throw new Error('Supabase configuration incomplete. Check environment variables.')
+}
+
+console.log('🔗 Initializing Supabase client...')
+console.log('📍 Supabase URL:', supabaseUrl)
+
+const supabase = createClient(supabaseUrl, supabaseAnonKey)
+
+console.log('✅ Supabase client initialized successfully')
+
+// Rate limiting protection
+const signUpAttempts = new Map();
+const SIGNUP_COOLDOWN_MS = 60000; // 60 seconds cooldown
+
 /**
- * OpenStudent - Supabase Client & Authentication
- * Vite-optimized production client with secure environment variables
- * Location: src/js/supabase.js
- * Version: 2.0.0
+ * Check if a user is attempting to sign up too frequently
+ * @param {string} email - Email address to check
+ * @returns {boolean} - True if user should wait, false otherwise
  */
+const isRateLimited = (email) => {
+  const normalizedEmail = email.trim().toLowerCase();
+  const lastAttempt = signUpAttempts.get(normalizedEmail);
 
-import { createClient } from '@supabase/supabase-js';
-
-/**
- * Configuration Management for Vite Environment
- */
-class Config {
-  constructor() {
-    this.supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-    this.supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-    this.isDevelopment = import.meta.env.DEV;
-    this.isProduction = import.meta.env.PROD;
-
-    this.validateConfig();
-  }
-
-  validateConfig() {
-    if (!this.supabaseUrl) {
-      throw new Error('VITE_SUPABASE_URL is required in environment variables');
-    }
-
-    if (!this.supabaseAnonKey) {
-      throw new Error('VITE_SUPABASE_ANON_KEY is required in environment variables');
-    }
-
-    // Validate URL format
-    if (!this.isValidUrl(this.supabaseUrl)) {
-      throw new Error('VITE_SUPABASE_URL must be a valid URL');
-    }
-
-    // Security check - ensure we're not accidentally exposing service role key
-    if (this.supabaseAnonKey.includes('service_role')) {
-      throw new Error('Service role key detected in client! Use anon key only.');
-    }
-  }
-
-  isValidUrl(string) {
-    try {
-      new URL(string);
+  if (lastAttempt) {
+    const timeSinceLastAttempt = Date.now() - lastAttempt;
+    if (timeSinceLastAttempt < SIGNUP_COOLDOWN_MS) {
+      console.log(`⏰ Rate limited: ${normalizedEmail} tried too soon`);
       return true;
-    } catch (_) {
-      return false;
     }
   }
 
-  getClientConfig() {
-    return {
-      url: this.supabaseUrl,
-      key: this.supabaseAnonKey,
-      options: {
-        auth: {
-          autoRefreshToken: true,
-          persistSession: true,
-          detectSessionInUrl: true,
-          // Enhanced security for production
-          storage: this.isProduction ?
-            window?.localStorage :
-            window?.sessionStorage || window?.localStorage
-        },
-        global: {
-          headers: {
-            'X-Client-Info': 'openstudent-web@2.0.0'
-          }
-        }
-      }
-    };
-  }
-}
-
-/**
- * Enhanced Logger with Vite-specific optimizations
- */
-class Logger {
-  constructor(config) {
-    this.isDev = config.isDevelopment;
-    this.logLevel = import.meta.env.VITE_LOG_LEVEL || (this.isDev ? 'debug' : 'error');
-  }
-
-  shouldLog(level) {
-    const levels = { debug: 0, info: 1, warn: 2, error: 3 };
-    return levels[level] >= levels[this.logLevel];
-  }
-
-  log(level, message, data = null) {
-    if (!this.shouldLog(level)) return;
-
-    const timestamp = new Date().toISOString();
-    const logData = { timestamp, level, message, data };
-
-    const consoleMethod = level === 'error' ? 'error' :
-                         level === 'warn' ? 'warn' : 'log';
-
-    console[consoleMethod](`[OpenStudent:${level.toUpperCase()}]`, message, data);
-
-    // In production, send errors to monitoring service
-    if (!this.isDev && level === 'error') {
-      this.sendToMonitoring(logData);
-    }
-  }
-
-  debug(message, data) { this.log('debug', message, data); }
-  info(message, data) { this.log('info', message, data); }
-  warn(message, data) { this.log('warn', message, data); }
-  error(message, data) { this.log('error', message, data); }
-
-  sendToMonitoring(logData) {
-    // Integration point for error monitoring (Sentry, LogRocket, etc.)
-    if (typeof window !== 'undefined') {
-      try {
-        const errors = JSON.parse(localStorage.getItem('openstudent_errors') || '[]');
-        errors.push(logData);
-        localStorage.setItem('openstudent_errors', JSON.stringify(errors.slice(-50)));
-      } catch (e) {
-        console.error('Failed to store error log', e);
-      }
-    }
-  }
-}
-
-/**
- * Enhanced Cache Manager with memory optimization
- */
-class CacheManager {
-  constructor() {
-    this.cache = new Map();
-    this.ttl = 5 * 60 * 1000; // 5 minutes default TTL
-    this.maxSize = 100; // Maximum cache entries
-    this.hitCount = 0;
-    this.missCount = 0;
-
-    // Cleanup timer to prevent memory leaks
-    this.cleanupInterval = setInterval(() => this.cleanup(), 60 * 1000);
-  }
-
-  set(key, value, customTtl = null) {
-    // Evict oldest entries if cache is full
-    if (this.cache.size >= this.maxSize) {
-      const firstKey = this.cache.keys().next().value;
-      this.cache.delete(firstKey);
-    }
-
-    const ttl = customTtl || this.ttl;
-    const expiry = Date.now() + ttl;
-    this.cache.set(key, { value, expiry, lastAccessed: Date.now() });
-  }
-
-  get(key) {
-    const item = this.cache.get(key);
-    if (!item) {
-      this.missCount++;
-      return null;
-    }
-
-    if (Date.now() > item.expiry) {
-      this.cache.delete(key);
-      this.missCount++;
-      return null;
-    }
-
-    item.lastAccessed = Date.now();
-    this.hitCount++;
-    return item.value;
-  }
-
-  invalidate(pattern) {
-    const keysToDelete = [];
-    for (const key of this.cache.keys()) {
-      if (key.includes(pattern)) {
-        keysToDelete.push(key);
-      }
-    }
-    keysToDelete.forEach(key => this.cache.delete(key));
-  }
-
-  cleanup() {
-    const now = Date.now();
-    const keysToDelete = [];
-
-    for (const [key, item] of this.cache.entries()) {
-      if (now > item.expiry) {
-        keysToDelete.push(key);
-      }
-    }
-
-    keysToDelete.forEach(key => this.cache.delete(key));
-  }
-
-  clear() {
-    this.cache.clear();
-    this.hitCount = 0;
-    this.missCount = 0;
-  }
-
-  getStats() {
-    return {
-      size: this.cache.size,
-      hitRate: this.hitCount / (this.hitCount + this.missCount) || 0,
-      hitCount: this.hitCount,
-      missCount: this.missCount
-    };
-  }
-
-  destroy() {
-    clearInterval(this.cleanupInterval);
-    this.clear();
-  }
-}
-
-/**
- * Main OpenStudent Client Class - Vite Optimized
- */
-class OpenStudentClient {
-  constructor() {
-    this.config = new Config();
-    this.logger = new Logger(this.config);
-    this.cache = new CacheManager();
-
-    const clientConfig = this.config.getClientConfig();
-    this.supabase = createClient(
-      clientConfig.url,
-      clientConfig.key,
-      clientConfig.options
-    );
-
-    this.currentUser = null;
-    this.currentProfile = null;
-    this.isInitialized = false;
-    this.eventListeners = new Set();
-
-    // Setup auth state listener
-    this.setupAuthListener();
-
-    // Cleanup on page unload
-    if (typeof window !== 'undefined') {
-      window.addEventListener('beforeunload', () => this.cleanup());
-    }
-  }
-
-  /**
-   * Initialize the client and check existing session
-   */
-  async init() {
-    if (this.isInitialized) return this.getSessionInfo();
-
-    try {
-      const session = await this.checkSession();
-      this.isInitialized = true;
-      this.logger.info('OpenStudent client initialized', {
-        hasSession: !!session.user,
-        environment: this.config.isDevelopment ? 'development' : 'production'
-      });
-      return session;
-    } catch (error) {
-      this.logger.error('Client initialization failed', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Setup authentication state change listener with cleanup
-   */
-  setupAuthListener() {
-    const { data: { subscription } } = this.supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        this.logger.debug('Auth state changed', { event, hasSession: !!session });
-
-        if (event === 'SIGNED_OUT' || !session) {
-          this.currentUser = null;
-          this.currentProfile = null;
-          this.cache.clear();
-        } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-          this.currentUser = session.user;
-          await this.loadUserProfile();
-        }
-
-        // Dispatch custom event for UI updates
-        this.dispatchAuthEvent(event, session);
-      }
-    );
-
-    // Store subscription for cleanup
-    this.authSubscription = subscription;
-  }
-
-  /**
-   * Dispatch authentication events
-   */
-  dispatchAuthEvent(event, session) {
-    if (typeof window !== 'undefined') {
-      const customEvent = new CustomEvent('openstudent:auth-change', {
-        detail: { event, session, profile: this.currentProfile }
-      });
-      window.dispatchEvent(customEvent);
-    }
-  }
-
-  /**
-   * Enhanced login with comprehensive error handling
-   */
-  async login(email, password, options = {}) {
-    const { maxRetries = 3 } = options;
-
-    try {
-      // Input validation
-      this.validateLoginInput(email, password);
-      const normalizedEmail = email.trim().toLowerCase();
-
-      // Attempt login with retry logic
-      let lastError;
-      for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        try {
-          const { data, error } = await this.supabase.auth.signInWithPassword({
-            email: normalizedEmail,
-            password,
-            options: { shouldCreateUser: false }
-          });
-
-          if (error) throw error;
-
-          this.currentUser = data.user;
-          await this.loadUserProfile();
-
-          this.logger.info('Login successful', {
-            userId: data.user.id,
-            email: normalizedEmail,
-            role: this.currentProfile?.role
-          });
-
-          return {
-            success: true,
-            user: data.user,
-            profile: this.currentProfile,
-            session: data.session
-          };
-
-        } catch (error) {
-          lastError = error;
-          if (attempt < maxRetries && this.isRetryableError(error)) {
-            this.logger.warn(`Login attempt ${attempt} failed, retrying...`, error.message);
-            await this.delay(1000 * attempt);
-          } else {
-            break;
-          }
-        }
-      }
-
-      throw lastError;
-
-    } catch (error) {
-      this.logger.error('Login failed', { email, error: error.message });
-      return {
-        success: false,
-        error: this.getUserFriendlyError(error.message),
-        code: error.code || 'LOGIN_FAILED'
-      };
-    }
-  }
-
-  /**
-   * User registration with profile creation
-   */
-  async register(email, password, userData = {}) {
-    try {
-      this.validateRegistrationInput(email, password, userData);
-
-      const { data, error } = await this.supabase.auth.signUp({
-        email: email.trim().toLowerCase(),
-        password,
-        options: {
-          data: {
-            full_name: userData.fullName || userData.full_name || '',
-            university_id: userData.universityId || userData.university_id || null,
-            program_id: userData.programId || userData.program_id || null
-          }
-        }
-      });
-
-      if (error) throw error;
-
-      // Create user profile if signup successful
-      if (data.user && !error) {
-        const profileData = {
-          id: data.user.id,
-          email: data.user.email,
-          full_name: userData.fullName || userData.full_name || '',
-          role: 'contributor',
-          university_id: userData.universityId || userData.university_id || null,
-          program_id: userData.programId || userData.program_id || null,
-          points: 0,
-          total_earnings: 0.00,
-          verified: false,
-          is_active: true,
-          created_at: new Date().toISOString()
-        };
-
-        const profileResult = await this.insert('users', profileData);
-        if (!profileResult.success) {
-          this.logger.error('Profile creation failed', profileResult.error);
-          return {
-            success: false,
-            error: 'Account created but profile setup failed. Please contact support.'
-          };
-        }
-      }
-
-      this.logger.info('Registration successful', {
-        userId: data.user?.id,
-        needsConfirmation: !data.session
-      });
-
-      return {
-        success: true,
-        user: data.user,
-        needsConfirmation: !data.session
-      };
-
-    } catch (error) {
-      this.logger.error('Registration failed', { email, error: error.message });
-      return {
-        success: false,
-        error: this.getUserFriendlyError(error.message),
-        code: error.code || 'REGISTRATION_FAILED'
-      };
-    }
-  }
-
-  /**
-   * Enhanced logout with complete cleanup
-   */
-  async logout() {
-    try {
-      const { error } = await this.supabase.auth.signOut();
-
-      if (error) throw error;
-
-      // Clear all client state
-      this.currentUser = null;
-      this.currentProfile = null;
-      this.cache.clear();
-
-      // Clear sensitive data from storage
-      if (typeof window !== 'undefined') {
-        sessionStorage.removeItem('openstudent_temp_data');
-      }
-
-      this.logger.info('Logout successful');
-      return { success: true };
-
-    } catch (error) {
-      this.logger.error('Logout failed', error);
-      return { success: false, error: error.message };
-    }
-  }
-
-  /**
-   * Load user profile with enhanced caching
-   */
-  async loadUserProfile() {
-    if (!this.currentUser) return null;
-
-    const cacheKey = `profile:${this.currentUser.id}`;
-    const cached = this.cache.get(cacheKey);
-    if (cached) {
-      this.currentProfile = cached;
-      return cached;
-    }
-
-    try {
-      const { data, error } = await this.supabase
-        .from('users')
-        .select(`
-          id, email, role, university_id, program_id, full_name, bio,
-          avatar_url, points, total_earnings, verified, is_active,
-          created_at, last_login,
-          universities(id, name, code),
-          programs(id, name, code)
-        `)
-        .eq('id', this.currentUser.id)
-        .single();
-
-      if (error) throw error;
-
-      // Update last login timestamp
-      await this.supabase
-        .from('users')
-        .update({ last_login: new Date().toISOString() })
-        .eq('id', this.currentUser.id);
-
-      this.currentProfile = data;
-      this.cache.set(cacheKey, data, 10 * 60 * 1000); // Cache for 10 minutes
-
-      return data;
-
-    } catch (error) {
-      this.logger.error('Failed to load user profile', error);
-      return null;
-    }
-  }
-
-  /**
-   * Check current session
-   */
-  async checkSession() {
-    try {
-      const { data: { session }, error } = await this.supabase.auth.getSession();
-
-      if (error) throw error;
-
-      if (!session) {
-        return { success: true, user: null, profile: null };
-      }
-
-      this.currentUser = session.user;
-
-      if (!this.currentProfile) {
-        await this.loadUserProfile();
-      }
-
-      return {
-        success: true,
-        user: session.user,
-        profile: this.currentProfile,
-        session
-      };
-
-    } catch (error) {
-      this.logger.error('Session check failed', error);
-      return { success: false, error: error.message, user: null };
-    }
-  }
-
-  /**
-   * Enhanced query method with advanced filtering
-   */
-  async query(table, options = {}) {
-    const {
-      select = '*',
-      filters = {},
-      orderBy = null,
-      limit = null,
-      offset = null,
-      cache = true,
-      cacheTtl = null
-    } = options;
-
-    const cacheKey = cache ? `query:${table}:${JSON.stringify(options)}` : null;
-
-    if (cache && cacheKey) {
-      const cached = this.cache.get(cacheKey);
-      if (cached) return cached;
-    }
-
-    try {
-      let query = this.supabase.from(table).select(select);
-
-      // Apply filters with advanced operators
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value !== null && value !== undefined) {
-          if (Array.isArray(value)) {
-            query = query.in(key, value);
-          } else if (typeof value === 'object' && value.op) {
-            query = query[value.op](key, value.value);
-          } else {
-            query = query.eq(key, value);
-          }
-        }
-      });
-
-      // Apply ordering
-      if (orderBy) {
-        if (Array.isArray(orderBy)) {
-          orderBy.forEach(order => {
-            query = query.order(order.column, { ascending: order.ascending ?? true });
-          });
-        } else {
-          query = query.order(orderBy.column, { ascending: orderBy.ascending ?? true });
-        }
-      }
-
-      // Apply pagination
-      if (limit) query = query.limit(limit);
-      if (offset) query = query.range(offset, offset + (limit || 50) - 1);
-
-      const { data, error, count } = await query;
-
-      if (error) throw error;
-
-      const result = { success: true, data, count };
-
-      if (cache && cacheKey) {
-        this.cache.set(cacheKey, result, cacheTtl);
-      }
-
-      return result;
-
-    } catch (error) {
-      this.logger.error(`Query failed for table ${table}`, error);
-      return { success: false, error: error.message, data: null };
-    }
-  }
-
-  /**
-   * Enhanced insert method
-   */
-  async insert(table, data, options = {}) {
-    try {
-      const { returning = true, upsert = false } = options;
-
-      let query = this.supabase.from(table);
-
-      if (upsert) {
-        query = query.upsert(data);
-      } else {
-        query = query.insert(data);
-      }
-
-      if (returning) {
-        query = query.select();
-      }
-
-      const { data: result, error } = await query;
-
-      if (error) throw error;
-
-      // Invalidate relevant cache entries
-      this.cache.invalidate(table);
-
-      this.logger.debug(`Insert successful in ${table}`, {
-        recordCount: Array.isArray(data) ? data.length : 1
-      });
-
-      return { success: true, data: result };
-
-    } catch (error) {
-      this.logger.error(`Insert failed in ${table}`, error);
-      return { success: false, error: error.message, data: null };
-    }
-  }
-
-  /**
-   * Enhanced update method
-   */
-  async update(table, updates, filters, options = {}) {
-    try {
-      const { returning = true } = options;
-
-      let query = this.supabase.from(table).update(updates);
-
-      Object.entries(filters).forEach(([key, value]) => {
-        query = query.eq(key, value);
-      });
-
-      if (returning) {
-        query = query.select();
-      }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-
-      // Invalidate relevant cache entries
-      this.cache.invalidate(table);
-
-      return { success: true, data };
-
-    } catch (error) {
-      this.logger.error(`Update failed in ${table}`, error);
-      return { success: false, error: error.message, data: null };
-    }
-  }
-
-  /**
-   * Delete method
-   */
-  async delete(table, filters) {
-    try {
-      let query = this.supabase.from(table).delete();
-
-      Object.entries(filters).forEach(([key, value]) => {
-        query = query.eq(key, value);
-      });
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-
-      // Invalidate relevant cache entries
-      this.cache.invalidate(table);
-
-      return { success: true, data };
-
-    } catch (error) {
-      this.logger.error(`Delete failed in ${table}`, error);
-      return { success: false, error: error.message, data: null };
-    }
-  }
-
-  /**
-   * Role and permission methods
-   */
-  hasRole(role) {
-    return this.currentProfile?.role === role;
-  }
-
-  isAdmin() {
-    return this.hasRole('admin');
-  }
-
-  isContributor() {
-    return this.hasRole('contributor');
-  }
-
-  canModerate() {
-    return this.isAdmin() || this.hasRole('reviewer');
-  }
-
-  getCurrentUser() {
-    return this.currentUser;
-  }
-
-  getCurrentProfile() {
-    return this.currentProfile;
-  }
-
-  getSessionInfo() {
-    return {
-      user: this.currentUser,
-      profile: this.currentProfile,
-      isAuthenticated: !!this.currentUser
-    };
-  }
-
-  /**
-   * Event listener management
-   */
-  onAuthStateChange(callback) {
-    const listener = (event) => {
-      callback(event.detail.event, event.detail.session, event.detail.profile);
-    };
-
-    if (typeof window !== 'undefined') {
-      window.addEventListener('openstudent:auth-change', listener);
-      this.eventListeners.add({ type: 'openstudent:auth-change', listener });
-    }
-
-    return () => {
-      if (typeof window !== 'undefined') {
-        window.removeEventListener('openstudent:auth-change', listener);
-        this.eventListeners.delete({ type: 'openstudent:auth-change', listener });
-      }
-    };
-  }
-
-  /**
-   * Input validation methods
-   */
-  validateEmail(email) {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  }
-
-  validateLoginInput(email, password) {
-    if (!email || typeof email !== 'string') {
-      throw new Error('Valid email address is required');
-    }
-    if (!this.validateEmail(email)) {
-      throw new Error('Please enter a valid email address');
-    }
-    if (!password || typeof password !== 'string' || password.length < 6) {
-      throw new Error('Password must be at least 6 characters long');
-    }
-  }
-
-  validateRegistrationInput(email, password, userData) {
-    this.validateLoginInput(email, password);
-
-    // Enhanced password validation for registration
-    if (password.length < 8) {
-      throw new Error('Password must be at least 8 characters long');
-    }
-
-    if (!userData.fullName || !userData.full_name) {
-      throw new Error('Full name is required');
-    }
-  }
-
-  /**
-   * Error handling utilities
-   */
-  isRetryableError(error) {
-    const retryableCodes = ['NETWORK_ERROR', 'TIMEOUT', 'SERVER_ERROR'];
-    return (
-      retryableCodes.some(code => error.message?.includes(code)) ||
-      error.status >= 500 ||
-      error.code === 'ECONNRESET' ||
-      error.code === 'ETIMEDOUT'
-    );
-  }
-
-  getUserFriendlyError(message) {
-    const errorMap = {
-      'Invalid login credentials': 'Invalid email or password. Please try again.',
-      'Email not confirmed': 'Please check your email and click the confirmation link.',
-      'Too many requests': 'Too many attempts. Please wait a few minutes and try again.',
-      'Network request failed': 'Connection error. Please check your internet connection.',
-      'User already registered': 'An account with this email already exists.',
-      'Password should be at least 6 characters': 'Password must be at least 6 characters long.',
-      'Signup is not allowed for this instance': 'Registration is currently disabled. Please contact support.',
-      'Invalid email': 'Please enter a valid email address.'
-    };
-
-    return errorMap[message] || 'An unexpected error occurred. Please try again.';
-  }
-
-  delay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
-
-  /**
-   * Health check for monitoring
-   */
-  async healthCheck() {
-    try {
-      const start = Date.now();
-      const { data, error } = await this.supabase.from('users').select('count').limit(1);
-      const responseTime = Date.now() - start;
-
-      return {
-        status: error ? 'unhealthy' : 'healthy',
-        responseTime,
-        timestamp: new Date().toISOString(),
-        cacheStats: this.cache.getStats(),
-        error: error?.message
-      };
-    } catch (error) {
-      return {
-        status: 'unhealthy',
-        error: error.message,
-        timestamp: new Date().toISOString()
-      };
-    }
-  }
-
-  /**
-   * Cleanup method
-   */
-  cleanup() {
-    this.cache.destroy();
-
-    if (this.authSubscription) {
-      this.authSubscription.unsubscribe();
-    }
-
-    // Clean up event listeners
-    if (typeof window !== 'undefined') {
-      this.eventListeners.forEach(({ type, listener }) => {
-        window.removeEventListener(type, listener);
-      });
-    }
-    this.eventListeners.clear();
-
-    this.logger.info('OpenStudent client cleaned up');
-  }
-}
-
-// Initialize singleton instance
-const openStudentClient = new OpenStudentClient();
-
-// Auto-initialize when DOM is ready or immediately if already loaded
-if (typeof document !== 'undefined') {
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => openStudentClient.init());
-  } else {
-    openStudentClient.init();
-  }
-} else {
-  // For server-side or non-DOM environments
-  openStudentClient.init();
-}
-
-// ES Module exports
-export default openStudentClient;
-
-export const {
-  login,
-  register,
-  logout,
-  checkSession,
-  query,
-  insert,
-  update,
-  delete: deleteRecord,
-  isAdmin,
-  isContributor,
-  canModerate,
-  getCurrentUser,
-  getCurrentProfile,
-  onAuthStateChange
-} = {
-  login: (...args) => openStudentClient.login(...args),
-  register: (...args) => openStudentClient.register(...args),
-  logout: () => openStudentClient.logout(),
-  checkSession: () => openStudentClient.checkSession(),
-  query: (...args) => openStudentClient.query(...args),
-  insert: (...args) => openStudentClient.insert(...args),
-  update: (...args) => openStudentClient.update(...args),
-  delete: (...args) => openStudentClient.delete(...args),
-  isAdmin: () => openStudentClient.isAdmin(),
-  isContributor: () => openStudentClient.isContributor(),
-  canModerate: () => openStudentClient.canModerate(),
-  getCurrentUser: () => openStudentClient.getCurrentUser(),
-  getCurrentProfile: () => openStudentClient.getCurrentProfile(),
-  onAuthStateChange: (callback) => openStudentClient.onAuthStateChange(callback)
+  // Update the last attempt time
+  signUpAttempts.set(normalizedEmail, Date.now());
+  return false;
 };
 
-// Legacy global access for backwards compatibility (if needed)
-if (typeof window !== 'undefined') {
-  window.OpenStudent = openStudentClient;
-  window.supabaseClient = openStudentClient.supabase;
+/**
+ * Sanitize error messages to prevent exposure of sensitive information
+ * @param {Error|string} error - The error to sanitize
+ * @returns {string} - Safe error message
+ */
+const sanitizeError = (error) => {
+  const errorMessage = error?.message || error?.toString() || 'An unexpected error occurred'
 
-  // Legacy auth object
-  window.OpenStudentAuth = {
-    login: (...args) => openStudentClient.login(...args),
-    register: (...args) => openStudentClient.register(...args),
-    logout: () => openStudentClient.logout(),
-    checkSession: () => openStudentClient.checkSession(),
-    query: (...args) => openStudentClient.query(...args),
-    insert: (...args) => openStudentClient.insert(...args),
-    update: (...args) => openStudentClient.update(...args),
-    isAdmin: () => openStudentClient.isAdmin(),
-    isContributor: () => openStudentClient.isContributor(),
-    canModerate: () => openStudentClient.canModerate(),
-    getCurrentUser: () => openStudentClient.getCurrentUser(),
-    getCurrentProfile: () => openStudentClient.getCurrentProfile()
-  };
+  // Common error mappings for user-friendly messages
+  const errorMappings = {
+    'Invalid login credentials': 'Invalid email or password',
+    'Email not confirmed': 'Please check your email and confirm your account',
+    'User already registered': 'An account with this email already exists',
+    'Password should be at least 6 characters': 'Password must be at least 6 characters long',
+    'Unable to validate email address': 'Please enter a valid email address',
+    'signup_disabled': 'Account registration is currently disabled',
+    'For security purposes, you can only request this after': 'You\'re trying too quickly. Please wait a few seconds before retrying.',
+    'new row violates row-level security policy': 'Registration failed due to security policy. Please contact support.'
+  }
 
-  // Development helpers
-  if (import.meta.env.DEV) {
-    window.OpenStudentDebug = {
-      client: openStudentClient,
-      clearCache: () => openStudentClient.cache.clear(),
-      getCache: () => openStudentClient.cache,
-      getCacheStats: () => openStudentClient.cache.getStats(),
-      healthCheck: () => openStudentClient.healthCheck(),
-      getLogs: () => {
-        try {
-          return JSON.parse(localStorage.getItem('openstudent_errors') || '[]');
-        } catch {
-          return [];
-        }
-      },
-      config: openStudentClient.config
-    };
+  // Check for rate limiting errors
+  if (errorMessage.includes('For security purposes, you can only request this after')) {
+    return errorMappings['For security purposes, you can only request this after'];
+  }
+
+  // Check for RLS policy violations
+  if (errorMessage.includes('new row violates row-level security policy')) {
+    return errorMappings['new row violates row-level security policy'];
+  }
+
+  // Return mapped error or generic message
+  return errorMappings[errorMessage] || 'Something went wrong. Please try again.'
+}
+
+/**
+ * Get the current authenticated user
+ * @returns {Promise<{success: boolean, user?: object, message: string}>}
+ */
+export const getCurrentUser = async () => {
+  console.log('👤 Getting current user...')
+
+  try {
+    const { data: { user }, error } = await supabase.auth.getUser()
+
+    console.log('📊 Current user response:', {
+      user: user ? { id: user.id, email: user.email } : null,
+      error: error?.message
+    })
+
+    if (error) {
+      console.log('❌ Failed to get current user:', error.message)
+      return { success: false, message: 'Failed to get user information' }
+    }
+
+    if (!user) {
+      console.log('❌ No authenticated user found')
+      return { success: false, message: 'No authenticated user' }
+    }
+
+    console.log('✅ Current user retrieved successfully')
+    return {
+      success: true,
+      user: user,
+      message: 'User retrieved successfully'
+    }
+  } catch (error) {
+    console.error('💥 Unexpected error getting current user:', error)
+    return { success: false, message: 'An unexpected error occurred' }
   }
 }
+
+/**
+ * Get the current user's profile
+ * @returns {Promise<{success: boolean, profile?: object, message: string}>}
+ */
+export const getProfile = async () => {
+  console.log('👤 Fetching user profile...')
+
+  try {
+    // Get current session
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+
+    if (sessionError) {
+      console.log('❌ Session error:', sessionError.message)
+      return { success: false, message: 'Failed to get session. Please try again.' }
+    }
+
+    if (!session) {
+      console.log('❌ No active session')
+      return { success: false, message: 'No active session. Please log in again.' }
+    }
+
+    // Fetch user profile
+    const { data: profile, error: profileError } = await supabase
+      .from('users')
+      .select('id, email, full_name, role, university_id, program_id, profile_picture, created_at')
+      .eq('id', session.user.id)
+      .single()
+
+    console.log('📊 Profile fetch response:', {
+      profile: profile ? {
+        id: profile.id,
+        email: profile.email,
+        full_name: profile.full_name,
+        role: profile.role,
+        university_id: profile.university_id,
+        program_id: profile.program_id,
+        profile_picture: profile.profile_picture
+      } : null,
+      error: profileError?.message
+    })
+
+    if (profileError) {
+      console.log('❌ Profile fetch failed:', profileError.message)
+      return { success: false, message: 'Failed to fetch profile. Please try again.' }
+    }
+
+    if (!profile) {
+      console.log('❌ No profile found for user')
+      return { success: false, message: 'User profile not found. Please contact support.' }
+    }
+
+    console.log('✅ Profile loaded successfully')
+    return {
+      success: true,
+      profile: profile,
+      message: 'Profile loaded successfully'
+    }
+  } catch (error) {
+    console.error('💥 Unexpected profile fetch error:', error)
+    return { success: false, message: 'An unexpected error occurred' }
+  }
+}
+
+/**
+ * Update the current user's profile
+ * @param {object} updates - Object with profile fields to update
+ * @returns {Promise<{success: boolean, profile?: object, message: string}>}
+ */
+export const updateProfile = async (updates) => {
+  console.log('💾 Updating user profile...')
+  console.log('📝 Update data:', updates)
+
+  try {
+    // Get current session
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+
+    if (sessionError) {
+      console.log('❌ Session error:', sessionError.message)
+      return { success: false, message: 'Failed to get session. Please try again.' }
+    }
+
+    if (!session) {
+      console.log('❌ No active session')
+      return { success: false, message: 'No active session. Please log in again.' }
+    }
+
+    // Update user profile
+    const { data: profile, error: updateError } = await supabase
+      .from('users')
+      .update(updates)
+      .eq('id', session.user.id)
+      .select()
+
+    console.log('📊 Profile update response:', {
+      profile: profile ? profile[0] : null,
+      error: updateError?.message
+    })
+
+    if (updateError) {
+      console.log('❌ Profile update failed:', updateError.message)
+      return { success: false, message: sanitizeError(updateError) }
+    }
+
+    if (!profile || profile.length === 0) {
+      console.log('❌ No profile found after update')
+      return { success: false, message: 'Profile update failed. Please try again.' }
+    }
+
+    console.log('✅ Profile updated successfully')
+    return {
+      success: true,
+      profile: profile[0],
+      message: 'Profile updated successfully'
+    }
+
+  } catch (error) {
+    console.error('💥 Unexpected profile update error:', error)
+    return { success: false, message: sanitizeError(error) }
+  }
+}
+
+/**
+ * Check if a user's profile is complete
+ * @param {object} profile - The user's profile object
+ * @returns {boolean} - True if profile is complete, false otherwise
+ */
+export const checkProfileCompletion = (profile) => {
+  console.log('🔍 Checking profile completion...')
+
+  const isComplete = profile &&
+                    profile.full_name &&
+                    profile.university_id &&
+                    profile.program_id;
+
+  console.log(`📊 Profile completion: ${isComplete ? 'Complete' : 'Incomplete'}`)
+  return isComplete;
+}
+
+/**
+ * Sign in with OAuth provider
+ * @param {string} provider - The OAuth provider (e.g., 'google', 'github')
+ * @returns {Promise<{success: boolean, message: string}>}
+ */
+export const signInWithOAuth = async (provider) => {
+  console.log(`🔗 Starting ${provider} OAuth login...`)
+
+  try {
+    const redirectUrl = `${window.location.origin}/auth/callback`;
+    console.log('🔄 Redirect URL:', redirectUrl);
+
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: provider,
+      options: {
+        redirectTo: redirectUrl
+      }
+    })
+
+    console.log('📊 OAuth response:', {
+      url: data?.url ? 'Generated' : 'None',
+      error: error?.message
+    })
+
+    if (error) {
+      console.log(`❌ ${provider} OAuth failed:`, error.message)
+      return { success: false, message: sanitizeError(error) }
+    }
+
+    console.log(`🚀 Redirecting to ${provider} OAuth...`)
+    return {
+      success: true,
+      message: 'Redirecting to authentication provider'
+    }
+
+  } catch (error) {
+    console.error(`💥 ${provider} OAuth error:`, error)
+    return { success: false, message: sanitizeError(error) }
+  }
+}
+
+/**
+ * Sign out the current user
+ * @returns {Promise<{success: boolean, message: string}>}
+ */
+export const signOut = async () => {
+  console.log('🚪 Starting sign out process...')
+
+  try {
+    const { error } = await supabase.auth.signOut()
+
+    console.log('📊 Sign out response:', { error: error?.message })
+
+    if (error) {
+      console.log('❌ Sign out failed:', error.message)
+      return { success: false, message: sanitizeError(error) }
+    }
+
+    console.log('✅ Sign out successful')
+    return { success: true, message: 'Signed out successfully' }
+
+  } catch (error) {
+    console.error('💥 Sign out error:', error)
+    return { success: false, message: sanitizeError(error) }
+  }
+}
+
+/**
+ * Register a new user with email and password
+ * @param {string} fullName - User's full name
+ * @param {string} email - User's email address
+ * @param {string} password - User's password
+ * @returns {Promise<{success: boolean, message: string}>}
+ */
+export const register = async (fullName, email, password) => {
+  console.log('🚀 Starting user registration process...')
+  console.log('📝 Registration data:', { fullName, email, password: '***hidden***' })
+
+  try {
+    // Input validation
+    if (!fullName?.trim() || !email?.trim() || !password?.trim()) {
+      console.log('❌ Registration failed: Missing required fields')
+      return { success: false, message: 'All fields are required' }
+    }
+
+    if (password.length < 6) {
+      console.log('❌ Registration failed: Password too short')
+      return { success: false, message: 'Password must be at least 6 characters long' }
+    }
+
+    // Rate limiting check
+    if (isRateLimited(email)) {
+      console.log('❌ Registration failed: Rate limited')
+      return { success: false, message: 'You\'re trying too quickly. Please wait a minute before trying again.' }
+    }
+
+    // Step 1: Create auth user
+    console.log('👤 Creating auth user with Supabase...')
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email: email.trim(),
+      password: password,
+      options: {
+        data: {
+          full_name: fullName.trim()
+        }
+      }
+    })
+
+    console.log('📊 Auth signup response:', {
+      user: authData?.user?.id,
+      session: !!authData?.session,
+      error: authError?.message
+    })
+
+    if (authError) {
+      console.log('❌ Auth signup failed:', authError.message)
+      return { success: false, message: sanitizeError(authError) }
+    }
+
+    if (!authData?.user) {
+      console.log('❌ No user data returned from signup')
+      return { success: false, message: 'Registration failed. Please try again.' }
+    }
+
+    // Step 2: Insert user profile into users table
+    console.log('💾 Inserting user profile into users table...')
+    const profileData = {
+      id: authData.user.id,
+      email: email.trim(),
+      full_name: fullName.trim(),
+      role: 'contributor',
+      created_at: new Date().toISOString()
+    }
+
+    console.log('📋 Profile data:', profileData)
+
+    const { data: profileInsert, error: profileError } = await supabase
+      .from('users')
+      .insert([profileData])
+
+    console.log('📊 Profile insert response:', {
+      data: profileInsert,
+      error: profileError?.message
+    })
+
+    if (profileError) {
+      console.log('❌ Profile creation failed:', profileError.message)
+
+      // Check for RLS policy violation
+      if (profileError.message.includes('row-level security policy')) {
+        console.log('🔒 RLS policy violation detected')
+        console.log('⚠️ Orphaned auth user would need cleanup (not performed in frontend)')
+
+        return {
+          success: false,
+          message: sanitizeError(profileError)
+        }
+      }
+
+      // Log warning about orphaned auth user (no cleanup in frontend)
+      console.log('⚠️ Orphaned auth user would need cleanup (not performed in frontend)')
+
+      return {
+        success: false,
+        message: 'Registration failed. Please try again.'
+      }
+    }
+
+    console.log('✅ User registration completed successfully')
+    console.log('📧 User should check email for confirmation link')
+
+    return {
+      success: true,
+      message: 'Registration successful! Please check your email to confirm your account.'
+    }
+
+  } catch (error) {
+    console.error('💥 Unexpected registration error:', error)
+    return { success: false, message: sanitizeError(error) }
+  }
+}
+
+/**
+ * Login user with email and password
+ * @param {string} email - User's email address
+ * @param {string} password - User's password
+ * @returns {Promise<{success: boolean, profile?: object, message: string}>}
+ */
+export const login = async (email, password) => {
+  console.log('🔐 Starting user login process...')
+  console.log('📝 Login attempt for email:', email)
+
+  try {
+    // Input validation
+    if (!email?.trim() || !password?.trim()) {
+      console.log('❌ Login failed: Missing credentials')
+      return { success: false, message: 'Email and password are required' }
+    }
+
+    // Step 1: Authenticate with Supabase
+    console.log('🔑 Authenticating with Supabase...')
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password: password
+    })
+
+    console.log('📊 Auth signin response:', {
+      user: authData?.user?.id,
+      session: !!authData?.session,
+      error: authError?.message
+    })
+
+    if (authError) {
+      console.log('❌ Authentication failed:', authError.message)
+      return { success: false, message: sanitizeError(authError) }
+    }
+
+    if (!authData?.user || !authData?.session) {
+      console.log('❌ No user/session data returned from signin')
+      return { success: false, message: 'Login failed. Please try again.' }
+    }
+
+    // Step 2: Fetch user profile from users table
+    console.log('👤 Fetching user profile...')
+    const { data: profile, error: profileError } = await supabase
+      .from('users')
+      .select('id, email, full_name, role, university_id, program_id, profile_picture, created_at')
+      .eq('id', authData.user.id)
+      .single()
+
+    console.log('📊 Profile fetch response:', {
+      profile: profile ? {
+        id: profile.id,
+        email: profile.email,
+        full_name: profile.full_name,
+        role: profile.role,
+        university_id: profile.university_id,
+        program_id: profile.program_id,
+        profile_picture: profile.profile_picture
+      } : null,
+      error: profileError?.message
+    })
+
+    if (profileError) {
+      console.log('❌ Profile fetch failed:', profileError.message)
+      return { success: false, message: 'Login failed. Please try again.' }
+    }
+
+    if (!profile) {
+      console.log('❌ No profile found for user')
+      return { success: false, message: 'User profile not found. Please contact support.' }
+    }
+
+    console.log('✅ Login successful')
+    console.log('👤 User role:', profile.role)
+
+    return {
+      success: true,
+      profile: profile,
+      message: 'Login successful!'
+    }
+
+  } catch (error) {
+    console.error('💥 Unexpected login error:', error)
+    return { success: false, message: sanitizeError(error) }
+  }
+}
+
+// Export the Supabase client for advanced usage
+export { supabase }
+
+console.log('📦 Supabase module loaded successfully')
