@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Document - OpenStudent</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --primary-light: #dbeafe;
+            --secondary: #64748b;
+            --light: #f8fafc;
+            --dark: #1e293b;
+            --accent: #f59e0b;
+            --success: #10b981;
+            --error: #ef4444;
+            --border-radius: 12px;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            color: var(--dark);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* Header Styles */
+        header {
+            background: white;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-brand a {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-brand a i {
+            color: var(--accent);
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--dark);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: var(--border-radius);
+            transition: var(--transition);
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+            background: var(--primary-light);
+        }
+
+        .nav-links a.active {
+            color: white;
+            background: var(--primary);
+        }
+
+        /* Main Content */
+        main {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .upload-container {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+
+        .upload-header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .upload-header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .upload-header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .upload-body {
+            padding: 2rem;
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 1.8rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.6rem;
+            font-weight: 600;
+            color: var(--dark);
+            font-size: 1.05rem;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: var(--transition);
+            background: var(--light);
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        /* Upload Section */
+        .upload-section {
+            border: 2px dashed #cbd5e1;
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            transition: var(--transition);
+            background: #f8fafc;
+        }
+
+        .upload-section.dragover {
+            border-color: var(--primary);
+            background-color: var(--primary-light);
+        }
+
+        .upload-section h3 {
+            margin-bottom: 1.5rem;
+            color: var(--dark);
+            font-size: 1.3rem;
+        }
+
+        .upload-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.2rem;
+            margin-top: 1.5rem;
+        }
+
+        .upload-option {
+            padding: 1.5rem 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: var(--transition);
+            text-align: center;
+            background: white;
+        }
+
+        .upload-option:hover {
+            transform: translateY(-3px);
+            border-color: var(--primary);
+            box-shadow: var(--shadow);
+        }
+
+        .upload-option.selected {
+            border-color: var(--primary);
+            background-color: var(--primary-light);
+            box-shadow: var(--shadow);
+        }
+
+        .upload-option i {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .upload-option.file i {
+            color: #3b82f6;
+        }
+
+        .upload-option.github i {
+            color: #333;
+        }
+
+        .upload-option.mega i {
+            color: #d946ef;
+        }
+
+        .upload-option h4 {
+            margin: 0 0 0.5rem 0;
+            color: var(--dark);
+            font-size: 1.1rem;
+        }
+
+        .upload-option p {
+            margin: 0;
+            font-size: 0.9rem;
+            color: var(--secondary);
+            line-height: 1.5;
+        }
+
+        /* Input Containers */
+        .input-container {
+            display: none;
+            margin-top: 1.5rem;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .selected-file {
+            margin-top: 1rem;
+            padding: 1rem;
+            background-color: #f1f5f9;
+            border-radius: var(--border-radius);
+            font-size: 0.9rem;
+            border-left: 4px solid var(--primary);
+        }
+
+        .selected-file i {
+            margin-right: 0.5rem;
+            color: var(--primary);
+        }
+
+        /* Button Styles */
+        .submit-btn {
+            width: 100%;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 1.2rem;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(37, 99, 235, 0.25);
+        }
+
+        .submit-btn:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .loading-spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Message Styles */
+        .message {
+            padding: 1.2rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 1.5rem;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .message.success {
+            background-color: #ecfdf5;
+            border: 2px solid #10b981;
+            color: #065f46;
+        }
+
+        .message.error {
+            background-color: #fef2f2;
+            border: 2px solid #ef4444;
+            color: #991b1b;
+        }
+
+        .message i {
+            margin-right: 0.5rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-container {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .nav-links {
+                gap: 1rem;
+            }
+
+            .upload-options {
+                grid-template-columns: 1fr;
+            }
+
+            .upload-header {
+                padding: 1.5rem;
+            }
+
+            .upload-body {
+                padding: 1.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .nav-links {
+                flex-direction: column;
+                gap: 0.5rem;
+                width: 100%;
+            }
+
+            .nav-links a {
+                display: block;
+                text-align: center;
+                width: 100%;
+            }
+
+            main {
+                padding: 0 1rem;
+            }
+        }
+
+        /* Form Row for better spacing on larger screens */
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Tag input styling */
+        .tags-hint {
+            font-size: 0.85rem;
+            color: var(--secondary);
+            margin-top: 0.5rem;
+        }
+
+        /* Required field indicator */
+        .required::after {
+            content: " *";
+            color: var(--error);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="nav-container">
+                <div class="nav-brand">
+                    <a href="/"><i class="fas fa-graduation-cap"></i> OpenStudent</a>
+                </div>
+                <ul class="nav-links">
+                    <li><a href="/documents.html"><i class="fas fa-book"></i> Browse Documents</a></li>
+                    <li><a href="/upload.html" class="active"><i class="fas fa-cloud-upload-alt"></i> Upload</a></li>
+                    <li><a href="/profile.html"><i class="fas fa-user"></i> Profile</a></li>
+                    <li><a href="#" id="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="upload-container">
+            <div class="upload-header">
+                <h1>Share Your Knowledge</h1>
+                <p>Upload academic documents to help fellow students succeed. All uploads are reviewed before being published.</p>
+            </div>
+
+            <div class="upload-body">
+                <div id="message" class="message"></div>
+
+                <form id="upload-form">
+                    <div class="form-row">
+                        <!-- Program Selection -->
+                        <div class="form-group">
+                            <label for="program-select" class="required">Program</label>
+                            <select id="program-select" required>
+                                <option value="">Select your program</option>
+                            </select>
+                        </div>
+
+                        <!-- Course Selection -->
+                        <div class="form-group">
+                            <label for="course-select" class="required">Course</label>
+                            <select id="course-select" required disabled>
+                                <option value="">Select a program first</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <!-- Document Type -->
+                        <div class="form-group">
+                            <label for="document-type" class="required">Document Type</label>
+                            <select id="document-type" required>
+                                <option value="">Select document type</option>
+                                <option value="lecture-notes">Lecture Notes</option>
+                                <option value="past-questions">Past Questions</option>
+                                <option value="assignment">Assignment</option>
+                                <option value="project">Project Report</option>
+                                <option value="tutorial">Tutorial/Guide</option>
+                                <option value="reference">Reference Material</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+
+                        <!-- Title -->
+                        <div class="form-group">
+                            <label for="document-title" class="required">Title</label>
+                            <input
+                                type="text"
+                                id="document-title"
+                                placeholder="Enter a descriptive title for your document"
+                                required
+                                maxlength="255"
+                            >
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="form-group">
+                        <label for="document-description" class="required">Description</label>
+                        <textarea
+                            id="document-description"
+                            placeholder="Provide a detailed description of what this document contains, its purpose, and any relevant information..."
+                            required
+                            rows="4"
+                        ></textarea>
+                    </div>
+
+                    <!-- Abstract (Optional) -->
+                    <div class="form-group">
+                        <label for="document-abstract">Abstract (Optional)</label>
+                        <textarea
+                            id="document-abstract"
+                            placeholder="Brief summary or abstract of the document content..."
+                            rows="3"
+                        ></textarea>
+                    </div>
+
+                    <!-- Tags -->
+                    <div class="form-group">
+                        <label for="document-tags">Tags (Optional)</label>
+                        <input
+                            type="text"
+                            id="document-tags"
+                            placeholder="Enter tags separated by commas (e.g., calculus, derivatives, math)"
+                        >
+                        <div class="tags-hint">Add up to 10 tags to help others find your document</div>
+                    </div>
+
+                    <!-- File Upload Section -->
+                    <div class="form-group">
+                        <label class="required">Upload Method</label>
+                        <div class="upload-section" id="upload-section">
+                            <h3>Choose how to share your document</h3>
+                            <div class="upload-options">
+                                <div class="upload-option file" data-method="file">
+                                    <i class="fas fa-file-pdf"></i>
+                                    <h4>Upload File</h4>
+                                    <p>Upload PDF, images, or documents (max 50MB)</p>
+                                </div>
+                                <div class="upload-option github" data-method="github">
+                                    <i class="fab fa-github"></i>
+                                    <h4>GitHub Repository</h4>
+                                    <p>Link to your GitHub repository</p>
+                                </div>
+                                <div class="upload-option mega" data-method="mega">
+                                    <i class="fas fa-cloud"></i>
+                                    <h4>Large File (MEGA)</h4>
+                                    <p>For files larger than 50MB</p>
+                                </div>
+                            </div>
+
+                            <!-- File Input (hidden by default) -->
+                            <div class="input-container" id="file-input-wrapper">
+                                <input type="file" id="file-input" accept="*/*" multiple>
+                                <div id="selected-files" class="selected-file" style="display: none;">
+                                    <i class="fas fa-file"></i>
+                                    <span></span>
+                                </div>
+                            </div>
+
+                            <!-- GitHub Input (hidden by default) -->
+                            <div class="input-container" id="github-input">
+                                <input
+                                    type="url"
+                                    id="github-url"
+                                    placeholder="https://github.com/username/repository"
+                                    pattern="https://github\.com/.+"
+                                >
+                            </div>
+
+                            <!-- MEGA Upload will be handled separately -->
+                            <div class="input-container" id="mega-input-wrapper">
+                                <input type="file" id="mega-file-input" accept="*/*">
+                                <div id="mega-selected-file" class="selected-file" style="display: none;">
+                                    <i class="fas fa-file"></i>
+                                    <span></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="submit-btn" id="submit-btn">
+                        <div class="loading-spinner" id="loading-spinner"></div>
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        Upload Document
+                    </button>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+        import { supabase, getPrograms, getCurrentUser, signOut } from '../src/js/supabase.js';
+        import * as db from '../src/js/supabase2.js';
+        import { uploadImage } from '../src/js/imagekit.js';
+
+        // DOM Elements
+        const programSelect = document.getElementById('program-select');
+        const courseSelect = document.getElementById('course-select');
+        const documentType = document.getElementById('document-type');
+        const documentTitle = document.getElementById('document-title');
+        const documentDescription = document.getElementById('document-description');
+        const documentAbstract = document.getElementById('document-abstract');
+        const documentTags = document.getElementById('document-tags');
+        const uploadForm = document.getElementById('upload-form');
+        const submitBtn = document.getElementById('submit-btn');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const messageDiv = document.getElementById('message');
+        const logoutBtn = document.getElementById('logout-btn');
+
+        // Upload method elements
+        const uploadOptions = document.querySelectorAll('.upload-option');
+        const fileInputWrapper = document.getElementById('file-input-wrapper');
+        const fileInput = document.getElementById('file-input');
+        const selectedFilesDiv = document.getElementById('selected-files');
+        const githubInput = document.getElementById('github-input');
+        const githubUrl = document.getElementById('github-url');
+        const megaInputWrapper = document.getElementById('mega-input-wrapper');
+        const megaFileInput = document.getElementById('mega-file-input');
+        const megaSelectedFile = document.getElementById('mega-selected-file');
+
+        // State
+        let selectedUploadMethod = null;
+        let currentUser = null;
+        let uploadedFiles = [];
+
+        // Utility Functions
+        const showMessage = (text, type = 'error') => {
+            messageDiv.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> ${text}`;
+            messageDiv.className = `message ${type}`;
+            messageDiv.style.display = 'block';
+            setTimeout(() => {
+                messageDiv.style.display = 'none';
+            }, type === 'success' ? 5000 : 8000);
+        };
+
+        const setLoading = (loading) => {
+            submitBtn.disabled = loading;
+            loadingSpinner.style.display = loading ? 'inline-block' : 'none';
+            submitBtn.innerHTML = loading ?
+                '<div class="loading-spinner" id="loading-spinner"></div> Uploading...' :
+                '<i class="fas fa-cloud-upload-alt"></i> Upload Document';
+        };
+
+        const parseTagsString = (tagsStr) => {
+            if (!tagsStr || !tagsStr.trim()) return [];
+            return tagsStr
+                .split(',')
+                .map(tag => tag.trim())
+                .filter(tag => tag.length > 0)
+                .slice(0, 10); // Limit to 10 tags
+        };
+
+        // Authentication Check
+        const checkAuthentication = async () => {
+            try {
+                const userResult = await getCurrentUser();
+                if (!userResult.success) {
+                    window.location.href = '/login.html';
+                    return false;
+                }
+                currentUser = userResult.user;
+                return true;
+            } catch (error) {
+                console.error('Authentication check failed:', error);
+                window.location.href = '/login.html';
+                return false;
+            }
+        };
+
+        // Load Programs
+        const loadPrograms = async () => {
+            try {
+                const result = await getPrograms();
+                if (!result.success) {
+                    showMessage('Failed to load programs: ' + result.message);
+                    return;
+                }
+
+                // Clear existing options except the first one
+                programSelect.innerHTML = '<option value="">Select your program</option>';
+
+                result.data.forEach(program => {
+                    const option = document.createElement('option');
+                    option.value = program.id;
+                    option.textContent = program.name;
+                    programSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading programs:', error);
+                showMessage('Failed to load programs. Please refresh the page.');
+            }
+        };
+
+        // Load Courses for Selected Program
+        const loadCourses = async (programId) => {
+            try {
+                courseSelect.disabled = true;
+                courseSelect.innerHTML = '<option value="">Loading courses...</option>';
+
+                const result = await db.getCourses(programId);
+                if (!result.data) {
+                    showMessage('Failed to load courses: ' + (result.error?.message || 'Unknown error'));
+                    return;
+                }
+
+                // Clear and populate courses
+                courseSelect.innerHTML = '<option value="">Select a course</option>';
+
+                if (result.data.length === 0) {
+                    courseSelect.innerHTML = '<option value="">No courses found for this program</option>';
+                    return;
+                }
+
+                result.data.forEach(course => {
+                    const option = document.createElement('option');
+                    option.value = course.id;
+                    option.textContent = `${course.code} - ${course.name}`;
+                    courseSelect.appendChild(option);
+                });
+
+                courseSelect.disabled = false;
+            } catch (error) {
+                console.error('Error loading courses:', error);
+                showMessage('Failed to load courses. Please try again.');
+                courseSelect.innerHTML = '<option value="">Error loading courses</option>';
+            }
+        };
+
+        // Upload Method Selection
+        uploadOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                // Remove previous selections
+                uploadOptions.forEach(opt => opt.classList.remove('selected'));
+                fileInputWrapper.style.display = 'none';
+                githubInput.style.display = 'none';
+                megaInputWrapper.style.display = 'none';
+
+                // Set new selection
+                option.classList.add('selected');
+                selectedUploadMethod = option.dataset.method;
+
+                // Show appropriate input
+                switch (selectedUploadMethod) {
+                    case 'file':
+                        fileInputWrapper.style.display = 'block';
+                        break;
+                    case 'github':
+                        githubInput.style.display = 'block';
+                        break;
+                    case 'mega':
+                        megaInputWrapper.style.display = 'block';
+                        break;
+                }
+            });
+        });
+
+        // File Selection Handlers
+        fileInput.addEventListener('change', (e) => {
+            const files = Array.from(e.target.files);
+            if (files.length > 0) {
+                const fileNames = files.map(f => `${f.name} (${Math.round(f.size / 1024)}KB)`).join(', ');
+                selectedFilesDiv.querySelector('span').textContent = fileNames;
+                selectedFilesDiv.style.display = 'block';
+                uploadedFiles = files;
+            } else {
+                selectedFilesDiv.style.display = 'none';
+                uploadedFiles = [];
+            }
+        });
+
+        megaFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                megaSelectedFile.querySelector('span').textContent = `${file.name} (${Math.round(file.size / (1024 * 1024))}MB)`;
+                megaSelectedFile.style.display = 'block';
+                uploadedFiles = [file];
+            } else {
+                megaSelectedFile.style.display = 'none';
+                uploadedFiles = [];
+            }
+        });
+
+        // Handle File Uploads
+        const handleFileUploads = async () => {
+            const fileUrls = [];
+
+            try {
+                for (const file of uploadedFiles) {
+                    // Determine if it's an image/video or document
+                    const isMedia = file.type.startsWith('image/') || file.type.startsWith('video/');
+
+                    if (isMedia) {
+                        // Use ImageKit for media files
+                        const result = await uploadImage(file, {
+                            folder: '/documents/media',
+                            prefix: 'doc'
+                        });
+
+                        if (!result.success) {
+                            throw new Error(`Failed to upload ${file.name}: ${result.message}`);
+                        }
+
+                        fileUrls.push(result.url);
+                    } else {
+                        // For non-media files, we would use MEGA
+                        // Since we don't have the MEGA implementation in the provided files,
+                        // we'll show an error for now
+                        throw new Error('Large file upload via MEGA is not yet implemented. Please use GitHub or smaller files.');
+                    }
+                }
+
+                return fileUrls;
+            } catch (error) {
+                console.error('File upload error:', error);
+                throw error;
+            }
+        };
+
+        // Handle MEGA Upload (placeholder)
+        const handleMegaUpload = async () => {
+            // This would integrate with backend/mega/upload.js
+            // For now, return an error
+            throw new Error('MEGA upload is not yet implemented. Please use file upload or GitHub.');
+        };
+
+        // Form Submission
+        uploadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (!currentUser) {
+                showMessage('You must be logged in to upload documents.');
+                return;
+            }
+
+            setLoading(true);
+
+            try {
+                // Validate form
+                if (!programSelect.value || !courseSelect.value || !documentType.value ||
+                    !documentTitle.value.trim() || !documentDescription.value.trim()) {
+                    throw new Error('Please fill in all required fields.');
+                }
+
+                if (!selectedUploadMethod) {
+                    throw new Error('Please select an upload method.');
+                }
+
+                // Validate upload method specific requirements
+                let fileUrls = [];
+
+                switch (selectedUploadMethod) {
+                    case 'file':
+                        if (uploadedFiles.length === 0) {
+                            throw new Error('Please select at least one file to upload.');
+                        }
+                        fileUrls = await handleFileUploads();
+                        break;
+
+                    case 'github':
+                        if (!githubUrl.value.trim()) {
+                            throw new Error('Please enter a GitHub repository URL.');
+                        }
+                        fileUrls = [githubUrl.value.trim()];
+                        break;
+
+                    case 'mega':
+                        if (uploadedFiles.length === 0) {
+                            throw new Error('Please select a file for MEGA upload.');
+                        }
+                        fileUrls = await handleMegaUpload();
+                        break;
+                }
+
+                // Prepare document data
+                const docData = {
+                    title: documentTitle.value.trim(),
+                    description: documentDescription.value.trim(),
+                    abstract: documentAbstract.value.trim() || null,
+                    file_url: fileUrls[0], // Primary file URL
+                    course_id: courseSelect.value,
+                    contributor_id: currentUser.id,
+                    tags: parseTagsString(documentTags.value),
+                    price: 0, // Free by default
+                    is_public: true
+                };
+
+                // If there are multiple files, we could handle them as additional URLs
+                // For now, we'll use the first file URL as the main file_url
+
+                // Insert document into database
+                const result = await db.insertDocument(docData);
+
+                if (!result.data) {
+                    throw new Error(result.error?.message || 'Failed to save document metadata.');
+                }
+
+                // Success
+                showMessage(
+                    'Document uploaded successfully! It will be reviewed before being published.',
+                    'success'
+                );
+
+                // Reset form
+                uploadForm.reset();
+                selectedUploadMethod = null;
+                uploadedFiles = [];
+                uploadOptions.forEach(opt => opt.classList.remove('selected'));
+                fileInputWrapper.style.display = 'none';
+                githubInput.style.display = 'none';
+                megaInputWrapper.style.display = 'none';
+                selectedFilesDiv.style.display = 'none';
+                megaSelectedFile.style.display = 'none';
+                courseSelect.disabled = true;
+                courseSelect.innerHTML = '<option value="">Select a program first</option>';
+
+                // Redirect to documents page after delay
+                setTimeout(() => {
+                    window.location.href = '/documents.html';
+                }, 3000);
+
+            } catch (error) {
+                console.error('Upload error:', error);
+                showMessage(error.message || 'An unexpected error occurred during upload.');
+            } finally {
+                setLoading(false);
+            }
+        });
+
+        // Event Listeners
+        programSelect.addEventListener('change', (e) => {
+            if (e.target.value) {
+                loadCourses(e.target.value);
+            } else {
+                courseSelect.disabled = true;
+                courseSelect.innerHTML = '<option value="">Select a program first</option>';
+            }
+        });
+
+        logoutBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            try {
+                await signOut();
+                window.location.href = '/login.html';
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+        });
+
+        // Initialize Page
+        const initializePage = async () => {
+            if (await checkAuthentication()) {
+                await loadPrograms();
+            }
+        };
+
+        // Start initialization
+        initializePage().catch(error => {
+            console.error('Page initialization failed:', error);
+            showMessage('Failed to initialize page. Please refresh.');
+        });
+    </script>
+</body>
+</html>
