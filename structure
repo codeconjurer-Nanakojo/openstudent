@@ -51,3 +51,103 @@ openstudent/
 ├── vite.config.js             # Vite config
 ├── package.json               # Project metadata
 └── package-lock.json          # Dependency lock file
+
+
+# 📌 OpenStudent Development Phases
+
+## **Phase 1 — MVP Foundation (✅ Done)**
+**Goal:** Get a secure, working skeleton of the platform.
+**Scope:**
+- Authentication (email/password, OAuth, logout).
+- User profile (fetch, update, completion check).
+- Universities + programs seeded and selectable.
+- Profile picture optional with fallback avatar.
+- Contributor onboarding basics (role = contributor).
+- RLS enforced for `users`, `universities`, `programs`.
+
+**Deferred:**
+- “Other program” flow (RLS insert).
+- Global vs per‑university programs decision.
+- Error handling polish.
+- Contributor onboarding banner refinement.
+
+---
+
+## **Phase 2 — Document Management & Contributor Workflows (🚀 Current)**
+**Goal:** Enable contributors to upload, manage, and share academic documents.
+**Scope:**
+- New `supabase2.js` for courses + documents logic.
+- `courses` + `documents` tables (already in your DB).
+- `upload.html` → contributor upload form.
+- `documents.html` → public listing with filters.
+- Extend `profile.html` → “My Uploads” section.
+- File upload integration (`imagekit.js` or Supabase storage).
+- RLS: contributors manage only their own uploads.
+- Contribution tracking (counts per user).
+
+**Deferred:**
+- Incentive/reward system.
+- Document moderation/approval workflow.
+- Advanced search (keywords, tags).
+
+---
+
+## **Phase 3 — Community & Collaboration**
+**Goal:** Build a contributor‑driven academic community.
+**Scope:**
+- Ratings/reviews for documents.
+- Comment threads on documents.
+- Contributor badges/levels.
+- Notifications (new uploads in your program/course).
+- Basic analytics for contributors (views/downloads).
+
+---
+
+## **Phase 4 — Incentives & Monetization**
+**Goal:** Create sustainable contributor motivation and platform revenue.
+**Scope:**
+- Contributor credits/rewards system.
+- Paystack integration for payouts.
+- Optional premium features (early access, bulk downloads).
+- Admin dashboard for managing payouts + disputes.
+
+---
+
+## **Phase 5 — Advanced Features & Scaling**
+**Goal:** Make OpenStudent robust, scalable, and intelligent.
+**Scope:**
+- Full‑text search across documents.
+- AI‑powered document tagging & recommendations.
+- Analytics dashboard (usage trends, top contributors).
+- Admin moderation tools (flagging, takedowns).
+- Multi‑university scaling (beyond Ghana).
+
+---
+
+## **Phase 6 — Long‑Term Vision**
+**Goal:** Position OpenStudent as a nationwide (and later continental) academic archive.
+**Scope:**
+- Multi‑language support.
+- Mobile app (React Native or Flutter).
+- Offline access / sync.
+- Partnerships with universities.
+- Legal + compliance frameworks.
+- World‑class security & scalability.
+
+---
+
+# 🟡 Running Backlog (Skipped/Deferred Items)
+- Phase 1: “Other program” flow, global vs per‑university programs, error handling polish, contributor onboarding checks.
+- Phase 2: Incentives, moderation, advanced search.
+- Later: Analytics, AI features, mobile app, partnerships.
+
+---
+
+✅ With this roadmap, you can see the **entire arc**:
+- **Phase 1** gave you the skeleton.
+- **Phase 2** gives you the heart (documents).
+- **Phase 3+** add the community, incentives, and scale.
+
+---
+
+👉 Do you want me to **expand Phase 2 into a step‑by‑step execution plan** (which files to touch first, in what order, and what to test at each step), so you can start coding without overwhelm?

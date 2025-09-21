@@ -445,62 +445,134 @@ export const getAvatarUrl = (profile) => {
   return fallbackUrl
 }
 
+// ==================== IMAGE UPLOAD FUNCTIONS ====================
+
+/**
+ * Upload profile picture to ImageKit
+ * @param {File} file - The image file to upload
+ * @returns {Promise<{success: boolean, url?: string, message: string}>}
+ */
+export const uploadProfilePictureToImageKit = async (file) => {
+  console.log('📤 uploadProfilePictureToImageKit: Starting upload...');
+
+  try {
+    // Import the uploadImage function from imagekit.js
+    const { uploadImage } = await import('/src/js/imagekit.js');
+
+    // Upload the image with folder organization
+    const result = await uploadImage(file, {
+      folder: '/profile-pictures',
+      prefix: 'profile'
+    });
+
+    if (!result.success) {
+      return result;
+    }
+
+    console.log('✅ uploadProfilePictureToImageKit: Upload completed');
+    return {
+      success: true,
+      url: result.url,
+      message: 'Profile picture uploaded successfully'
+    };
+
+  } catch (error) {
+    console.error('💥 uploadProfilePictureToImageKit: Unexpected error:', error);
+    return {
+      success: false,
+      message: 'An unexpected error occurred during upload. Please try again.'
+    };
+  }
+};
 // ==================== DROPDOWN DATA FUNCTIONS ====================
 
 /**
  * Get universities list for dropdowns
  * @returns {Promise<Array>} - List of active universities
  */
+
 export const getUniversities = async () => {
-  console.log('🎓 getUniversities: Fetching universities...')
+  console.log('🎓 getUniversities: Fetching universities...');
 
   try {
     const { data, error } = await supabase
       .from('universities')
       .select('id, name, short_name')
       .eq('is_active', true)
-      .order('name')
+      .order('name');
 
     if (error) {
-      console.log('❌ getUniversities: Fetch failed:', error.message)
-      return []
+      console.log('❌ getUniversities: Fetch failed:', error.message);
+      return { success: false, message: 'Failed to fetch universities' };
     }
 
-    console.log('✅ getUniversities: Fetched successfully:', data?.length || 0, 'universities')
-    return data || []
+    console.log('✅ getUniversities: Fetched successfully:', data?.length || 0, 'universities');
+    return { success: true, data: data || [], message: 'Universities loaded successfully' };
 
   } catch (error) {
-    console.error('💥 getUniversities: Unexpected error:', error)
-    return []
+    console.error('💥 getUniversities: Unexpected error:', error);
+    return { success: false, message: 'An unexpected error occurred' };
   }
-}
-
+};
 /**
  * Get programs list for dropdowns
  * @returns {Promise<Array>} - List of programs
  */
+
 export const getPrograms = async () => {
-  console.log('📚 getPrograms: Fetching programs...')
+  console.log('📚 getPrograms: Fetching programs...');
 
   try {
     const { data, error } = await supabase
       .from('programs')
       .select('id, name')
-      .order('name')
+      .order('name');
 
     if (error) {
-      console.log('❌ getPrograms: Fetch failed:', error.message)
-      return []
+      console.log('❌ getPrograms: Fetch failed:', error.message);
+      return { success: false, message: 'Failed to fetch programs' };
     }
 
-    console.log('✅ getPrograms: Fetched successfully:', data?.length || 0, 'programs')
-    return data || []
+    console.log('✅ getPrograms: Fetched successfully:', data?.length || 0, 'programs');
+    return { success: true, data: data || [], message: 'Programs loaded successfully' };
 
   } catch (error) {
-    console.error('💥 getPrograms: Unexpected error:', error)
-    return []
+    console.error('💥 getPrograms: Unexpected error:', error);
+    return { success: false, message: 'An unexpected error occurred' };
   }
-}
+};
+/**
+ * Insert a new program into the programs table
+ * @param {string} programName - Name of the new program
+ * @returns {Promise<{success: boolean, programId?: string, message: string}>}
+ */
+export const insertProgram = async (programName) => {
+  console.log('➕ insertProgram: Adding new program:', programName);
+
+  try {
+    const { data, error } = await supabase
+      .from('programs')
+      .insert([{ name: programName }])
+      .select('id')
+      .single();
+
+    if (error) {
+      console.log('❌ insertProgram: Insert failed:', error.message);
+      return { success: false, message: sanitizeError(error) };
+    }
+
+    console.log('✅ insertProgram: Program added successfully, ID:', data.id);
+    return {
+      success: true,
+      programId: data.id,
+      message: 'Program added successfully'
+    };
+
+  } catch (error) {
+    console.error('💥 insertProgram: Unexpected error:', error);
+    return { success: false, message: sanitizeError(error) };
+  }
+};
 
 // ==================== LEGACY COMPATIBILITY FUNCTIONS ====================
 
