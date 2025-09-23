@@ -1,1 +1,205 @@
-<p>this is admin page</p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - OpenStudent</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/src/assets/css/admin.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="nav-container">
+                <div class="nav-brand">
+                    <a href="/"><i class="fas fa-graduation-cap"></i> OpenStudent</a>
+                </div>
+                <ul class="nav-links">
+                    <li><a href="/documents.html"><i class="fas fa-book"></i> Browse</a></li>
+                    <li><a href="/upload.html"><i class="fas fa-cloud-upload-alt"></i> Upload</a></li>
+                    <li><a href="/admin.html" class="active"><i class="fas fa-shield-halved"></i> Admin</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section class="page-section">
+            <div class="container-card">
+                <div class="section-header">
+                    <h1>Moderation Dashboard</h1>
+                    <div style="display:flex; gap:.5rem; align-items:center; flex-wrap:wrap">
+                        <p>Review and moderate contributed documents.</p>
+                        <select id="time-window" class="btn" title="Time window">
+                            <option value="all">All time</option>
+                            <option value="7d">Last 7 days</option>
+                            <option value="30d">Last 30 days</option>
+                            <option value="semester">This semester</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="message" class="message" style="display:none;"></div>
+
+                <div class="analytics-grid" id="admin-analytics" style="margin:1rem 0; display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:1rem;">
+                    <div class="stat-card"><div class="stat-value" id="u-total">0</div><div class="stat-label">Total Users</div></div>
+                    <div class="stat-card"><div class="stat-value" id="u-active">0</div><div class="stat-label">Active Users</div></div>
+                    <div class="stat-card"><div class="stat-value" id="u-suspended">0</div><div class="stat-label">Suspended Users</div></div>
+                    <div class="stat-card"><div class="stat-value" id="d-total">0</div><div class="stat-label">Total Documents</div></div>
+                    <div class="stat-card"><div class="stat-value" id="d-approved">0</div><div class="stat-label">Approved</div></div>
+                    <div class="stat-card"><div class="stat-value" id="d-pending">0</div><div class="stat-label">Pending</div></div>
+                    <div class="stat-card"><div class="stat-value" id="d-rejected">0</div><div class="stat-label">Rejected</div></div>
+                </div>
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:1rem; min-height:220px;">
+                    <div class="container-card" style="padding:1rem; min-height:220px;">
+                        <h3>Status Breakdown</h3>
+                        <div style="height:180px"><canvas id="chart-status"></canvas></div>
+                    </div>
+                    <div class="container-card" style="padding:1rem; min-height:220px;">
+                        <h3>Uploads per Program</h3>
+                        <div style="height:180px"><canvas id="chart-programs"></canvas></div>
+                    </div>
+                </div>
+
+                <div class="tabs">
+                    <button class="btn tab-btn" id="tab-docs">Documents</button>
+                    <button class="btn tab-btn" id="tab-users">Users</button>
+                    <button class="btn tab-btn" id="tab-projects">Projects</button>
+                    <button class="btn tab-btn" id="tab-catalog">Catalog</button>
+                </div>
+
+                <div class="filters-grid" id="docs-filters">
+                    <div class="form-group">
+                        <label for="program-select">Program</label>
+                        <select id="program-select">
+                            <option value="">All programs</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="course-select">Course</label>
+                        <select id="course-select" disabled>
+                            <option value="">All courses</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="status-select">Status</label>
+                        <select id="status-select">
+                            <option value="">All</option>
+                            <option value="pending">Pending</option>
+                            <option value="approved">Approved</option>
+                            <option value="rejected">Rejected</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="type-select">Type</label>
+                        <select id="type-select">
+                            <option value="">All</option>
+                            <option value="lecture-notes">Lecture Notes</option>
+                            <option value="past-questions">Past Questions</option>
+                            <option value="assignment">Assignment</option>
+                            <option value="project">Project Report</option>
+                            <option value="tutorial">Tutorial/Guide</option>
+                            <option value="reference">Reference</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label for="search-input">Search</label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-search"></i>
+                            <input id="search-input" type="text" placeholder="Search title, description, abstract...">
+                        </div>
+                    </div>
+                    <div class="form-actions" style="align-self: end;">
+                        <button id="apply-filters" class="btn primary"><i class="fas fa-filter"></i> Apply</button>
+                        <button id="reset-filters" class="btn"><i class="fas fa-eraser"></i> Reset</button>
+                    </div>
+                </div>
+
+                <div id="documents-grid" class="cards-grid"></div>
+
+                <div id="users-panel" style="display:none; margin-top:1rem;">
+                    <div class="list-header">
+                        <h2>Users</h2>
+                        <button id="refresh-users" class="btn"><i class="fas fa-rotate"></i> Refresh</button>
+                    </div>
+                    <div id="users-list" class="list-grid"></div>
+                </div>
+
+                <div id="projects-panel" style="display:none; margin-top:1rem;">
+                    <div class="list-header">
+                        <h2>Projects</h2>
+                        <div class="actions-inline">
+                            <select id="proj-status" class="btn">
+                                <option value="">All</option>
+                                <option value="pending">Pending</option>
+                                <option value="approved">Approved</option>
+                                <option value="rejected">Rejected</option>
+                            </select>
+                            <input id="proj-contributor" class="btn" type="text" placeholder="Contributor email">
+                            <select id="proj-course" class="btn"><option value="">All Courses</option></select>
+                            <select id="proj-university" class="btn"><option value="">All Universities</option></select>
+                            <button id="export-csv" class="btn"><i class="fas fa-file-csv"></i> CSV</button>
+                            <button id="export-json" class="btn"><i class="fas fa-file-code"></i> JSON</button>
+                            <button id="refresh-projects" class="btn"><i class="fas fa-rotate"></i> Refresh</button>
+                        </div>
+                    </div>
+                    <div id="projects-list" class="list-grid"></div>
+                    <div class="pagination" style="margin-top: .75rem;">
+                        <button id="proj-prev-page" class="btn" disabled><i class="fas fa-chevron-left"></i> Prev</button>
+                        <span id="proj-page-info">Page 1</span>
+                        <button id="proj-next-page" class="btn" disabled>Next <i class="fas fa-chevron-right"></i></button>
+                    </div>
+                </div>
+
+                <div id="catalog-panel" style="display:none; margin-top:1rem;">
+                    <div class="list-header">
+                        <h2>Programs & Courses</h2>
+                        <div class="actions-inline">
+                            <input id="new-program-name" class="btn" type="text" placeholder="New program name">
+                            <button id="add-program" class="btn primary"><i class="fas fa-plus"></i> Add Program</button>
+                        </div>
+                    </div>
+                    <div style="display:grid; grid-template-columns: 1fr 2fr; gap:1rem;">
+                        <div class="container-card" style="padding:1rem;">
+                            <h3>Programs</h3>
+                            <div id="programs-list" class="list-grid"></div>
+                        </div>
+                        <div class="container-card" style="padding:1rem;">
+                            <div class="list-header" style="margin-bottom:.5rem;">
+                                <h3>Courses</h3>
+                                <div class="actions-inline">
+                                    <input id="course-code" class="btn" type="text" placeholder="Code">
+                                    <input id="course-name" class="btn" type="text" placeholder="Name">
+                                    <input id="course-level" class="btn" type="number" placeholder="Level">
+                                    <input id="course-semester" class="btn" type="number" placeholder="Sem">
+                                    <button id="add-course" class="btn primary"><i class="fas fa-plus"></i> Add Course</button>
+                                </div>
+                            </div>
+                            <div id="courses-list" class="list-grid"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="history-backdrop" class="modal-backdrop">
+                    <div class="modal">
+                        <div class="modal-header"><h3>Moderation History</h3></div>
+                        <div class="modal-body"><div id="history-content">Loading...</div></div>
+                        <div class="modal-actions"><button id="history-close" class="btn">Close</button></div>
+                    </div>
+                </div>
+
+                <div class="pagination">
+                    <button id="prev-page" class="btn" disabled><i class="fas fa-chevron-left"></i> Prev</button>
+                    <span id="page-info">Page 1</span>
+                    <button id="next-page" class="btn" disabled>Next <i class="fas fa-chevron-right"></i></button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script type="module" src="/src/js/admin.js">
+
+    </script>
+</body>
+</html>

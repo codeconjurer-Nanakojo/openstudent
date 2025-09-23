@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Programs (Admin) - OpenStudent</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/src/assets/css/admin.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="nav-container">
+                <div class="nav-brand">
+                    <a href="/"><i class="fas fa-graduation-cap"></i> OpenStudent</a>
+                </div>
+                <ul class="nav-links">
+                    <li><a href="/documents.html"><i class="fas fa-book"></i> Browse Documents</a></li>
+                    <li><a href="/upload.html"><i class="fas fa-cloud-upload-alt"></i> Upload</a></li>
+                    <li><a href="/programs.html" class="active"><i class="fas fa-layer-group"></i> Programs</a></li>
+                    <li><a href="/courses.html"><i class="fas fa-list"></i> Courses</a></li>
+                    <li><a href="/profile.html"><i class="fas fa-user"></i> Profile</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section class="page-section">
+            <div class="container-card">
+                <div class="section-header">
+                    <h1>Manage Programs</h1>
+                    <p>Add new academic programs and view existing ones.</p>
+                </div>
+
+                <div id="message" class="message" style="display:none;"></div>
+
+                <form id="program-form" class="form-grid">
+                    <div class="form-group">
+                        <label for="program-name" class="required">Program Name</label>
+                        <input id="program-name" type="text" placeholder="e.g., BSc Computer Science" required maxlength="120">
+                    </div>
+                    <!-- Optional future field; kept for UX but not persisted yet -->
+                    <div class="form-group">
+                        <label for="program-code">Program Code (optional)</label>
+                        <input id="program-code" type="text" placeholder="e.g., BSC-CS" maxlength="32">
+                    </div>
+                    <div class="form-actions">
+                        <button id="add-program-btn" class="btn primary" type="submit"><i class="fas fa-plus"></i> Add Program</button>
+                    </div>
+                </form>
+
+                <div class="list-header">
+                    <h2>Existing Programs</h2>
+                    <button id="refresh-btn" class="btn"><i class="fas fa-rotate"></i> Refresh</button>
+                </div>
+
+                <div id="programs-list" class="list-grid"></div>
+            </div>
+        </section>
+    </main>
+
+    <script type="module">
+        import { getPrograms, insertProgram } from '/src/js/supabase.js';
+
+        const form = document.getElementById('program-form');
+        const nameInput = document.getElementById('program-name');
+        const listEl = document.getElementById('programs-list');
+        const messageEl = document.getElementById('message');
+        const refreshBtn = document.getElementById('refresh-btn');
+
+        const showMessage = (text, type = 'error') => {
+            messageEl.className = `message ${type}`;
+            messageEl.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> ${text}`;
+            messageEl.style.display = 'block';
+            setTimeout(() => { messageEl.style.display = 'none'; }, 5000);
+        };
+
+        const renderPrograms = (programs) => {
+            if (!programs || programs.length === 0) {
+                listEl.innerHTML = '<div class="empty-state">No programs yet.</div>';
+                return;
+            }
+            listEl.innerHTML = programs.map(p => `
+                <div class="list-item">
+                    <div>
+                        <div class="item-title">${p.name}</div>
+                        <div class="item-sub">ID: ${p.id}</div>
+                    </div>
+                </div>
+            `).join('');
+        };
+
+        const loadPrograms = async () => {
+            const result = await getPrograms();
+            if (!result.success) {
+                showMessage(result.message || 'Failed to load programs');
+                return;
+            }
+            renderPrograms(result.data);
+        };
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = nameInput.value.trim();
+            if (!name) {
+                showMessage('Program name is required');
+                return;
+            }
+            const res = await insertProgram(name);
+            if (!res.success) {
+                showMessage(res.message || 'Failed to add program');
+                return;
+            }
+            showMessage('Program added', 'success');
+            nameInput.value = '';
+            loadPrograms();
+        });
+
+        refreshBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            loadPrograms();
+        });
+
+        loadPrograms();
+    </script>
+</body>
+</html>
+

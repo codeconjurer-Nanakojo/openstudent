@@ -1,13 +1,80 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite App</title>
-  </head>
-  <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.js"></script>
-  </body>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpenStudent</title>
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/src/assets/css/admin.css">
+  <style>
+    .hero { padding: 4rem 1rem; text-align:center; }
+    .hero h1 { font-size: 2rem; margin-bottom: .5rem; }
+    .hero p { color: #475569; margin-bottom: 1rem; }
+    .cta-group { display:flex; gap:.5rem; justify-content:center; flex-wrap:wrap; }
+    .features { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:1rem; margin-top:2rem; }
+    .feature-card { padding:1rem; border:1px solid #e5e7eb; border-radius:.5rem; background:#fff; }
+    .stats { display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:1rem; margin-top:2rem; }
+    .footer { padding:2rem 1rem; text-align:center; color:#64748b; }
+  </style>
+</head>
+<body>
+  <header>
+    <nav>
+      <div class="nav-container">
+        <div class="nav-brand">
+          <a href="/"><i class="fas fa-graduation-cap"></i> OpenStudent</a>
+        </div>
+        <ul class="nav-links">
+          <li><a href="/"><i class="fas fa-home"></i> Home</a></li>
+          <li><a href="/documents.html"><i class="fas fa-book"></i> Browse</a></li>
+          <li><a id="nav-dashboard" href="/profile.html"><i class="fas fa-user"></i> Dashboard</a></li>
+          <li><a id="nav-contribute" href="/upload.html"><i class="fas fa-cloud-upload-alt"></i> Contribute</a></li>
+        </ul>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <section class="page-section">
+      <div class="container-card">
+        <div class="hero">
+          <h1>Discover, Share, and Learn with OpenStudent</h1>
+          <p>The open archive for university projects, documents, and learning resources.</p>
+          <div class="cta-group">
+            <a id="cta-auth" class="btn primary" href="/login.html"><i class="fas fa-right-to-bracket"></i> Sign In / Sign Up</a>
+            <a id="cta-dashboard" class="btn" href="/profile.html" style="display:none"><i class="fas fa-gauge"></i> Go to Dashboard</a>
+            <a id="cta-contribute" class="btn" href="/upload.html"><i class="fas fa-cloud-upload-alt"></i> Contribute a Project</a>
+            <a id="cta-browse" class="btn" href="/documents.html"><i class="fas fa-book"></i> Browse Projects</a>
+          </div>
+        </div>
+
+        <div class="features">
+          <div class="feature-card"><h3><i class="fas fa-box-archive"></i> Archive</h3><p>Find projects by program, course, and tags.</p></div>
+          <div class="feature-card"><h3><i class="fas fa-shield-halved"></i> Security</h3><p>RLS-protected access and authenticated downloads.</p></div>
+          <div class="feature-card"><h3><i class="fas fa-chart-line"></i> Insights</h3><p>Track views, uploads, and badges over time.</p></div>
+        </div>
+
+        <div class="stats">
+          <div class="stat-card"><div class="stat-value" id="stat-projects">0</div><div class="stat-label">Total Projects</div></div>
+          <div class="stat-card"><div class="stat-value" id="stat-contributors">0</div><div class="stat-label">Contributors</div></div>
+          <div class="stat-card"><div class="stat-value" id="stat-universities">0</div><div class="stat-label">Universities</div></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="cta-group" style="justify-content:center;">
+      <a class="btn" href="/docs/README.md">About</a>
+      <a class="btn" href="/docs/ROADMAP.md">Roadmap</a>
+      <a class="btn" href="https://github.com" target="_blank" rel="noopener">GitHub</a>
+      <a class="btn" href="#">Privacy</a>
+      <a class="btn" href="#">Terms</a>
+      <a class="btn" href="mailto:contact@example.com">Contact</a>
+    </div>
+  </footer>
+
+  <script type="module" src="/src/js/index.js"></script>
+</body>
 </html>

@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browse Documents - OpenStudent</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/src/assets/css/admin.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="nav-container">
+                <div class="nav-brand">
+                    <a href="/"><i class="fas fa-graduation-cap"></i> OpenStudent</a>
+                </div>
+                <ul class="nav-links">
+                    <li><a href="/documents.html" class="active"><i class="fas fa-book"></i> Browse Documents</a></li>
+                    <li><a href="/upload.html"><i class="fas fa-cloud-upload-alt"></i> Upload</a></li>
+                    <li><a href="/profile.html"><i class="fas fa-user"></i> Profile</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section class="page-section">
+            <div class="container-card">
+                <div class="section-header">
+                    <h1>Browse Documents</h1>
+                    <p>Search and filter approved, public documents contributed by students across Ghana.</p>
+                </div>
+
+                <div id="message" class="message" style="display:none;"></div>
+
+                <div class="filters-grid">
+                    <div class="form-group">
+                        <label for="program-select">Program</label>
+                        <select id="program-select">
+                            <option value="">All programs</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="course-select">Course</label>
+                        <select id="course-select" disabled>
+                            <option value="">All courses</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="type-select">Document Type</label>
+                        <select id="type-select">
+                            <option value="">All types</option>
+                            <option value="lecture-notes">Lecture Notes</option>
+                            <option value="past-questions">Past Questions</option>
+                            <option value="assignment">Assignment</option>
+                            <option value="project">Project Report</option>
+                            <option value="tutorial">Tutorial/Guide</option>
+                            <option value="reference">Reference Material</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label for="search-input">Search</label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-search"></i>
+                            <input id="search-input" type="text" placeholder="Search title, description, abstract...">
+                        </div>
+                    </div>
+                    <div class="form-actions" style="align-self: end;">
+                        <button id="apply-filters" class="btn primary"><i class="fas fa-filter"></i> Apply</button>
+                        <button id="reset-filters" class="btn"><i class="fas fa-eraser"></i> Reset</button>
+                    </div>
+                </div>
+
+                <div id="documents-grid" class="cards-grid"></div>
+
+                <div class="pagination">
+                    <button id="prev-page" class="btn" disabled><i class="fas fa-chevron-left"></i> Prev</button>
+                    <span id="page-info">Page 1</span>
+                    <button id="next-page" class="btn" disabled>Next <i class="fas fa-chevron-right"></i></button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script type="module">
+        import { getPrograms } from '/src/js/supabase.js';
+        import { getCourses, getDocuments, countDocuments } from '/src/js/supabase2.js';
+
+        const programSelect = document.getElementById('program-select');
+        const courseSelect = document.getElementById('course-select');
+        const typeSelect = document.getElementById('type-select');
+        const searchInput = document.getElementById('search-input');
+        const applyBtn = document.getElementById('apply-filters');
+        const resetBtn = document.getElementById('reset-filters');
+        const grid = document.getElementById('documents-grid');
+        const pageInfo = document.getElementById('page-info');
+        const prevBtn = document.getElementById('prev-page');
+        const nextBtn = document.getElementById('next-page');
+        const messageEl = document.getElementById('message');
+
+        const PAGE_SIZE = 12;
+        let currentPage = 1;
+        let totalCount = 0;
+
+        const showMessage = (text, type = 'error') => {
+            messageEl.className = `message ${type}`;
+            messageEl.innerHTML = `<i class=\"fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}\"></i> ${text}`;
+            messageEl.style.display = 'block';
+            setTimeout(() => { messageEl.style.display = 'none'; }, 5000);
+        };
+
+        const formatDate = (iso) => {
+            try { return new Date(iso).toLocaleDateString(); } catch { return ''; }
+        };
+
+        const isGitHub = (url) => typeof url === 'string' && url.startsWith('https://github.com');
+        const isMega = (url) => typeof url === 'string' && url.includes('mega.nz');
+
+        const placeholderImage = 'https://via.placeholder.com/600x360.png?text=OpenStudent';
+
+        const renderCards = (docs, filterType) => {
+            let items = docs || [];
+            if (filterType) {
+                items = items.filter(d => Array.isArray(d.tags) && d.tags.includes(filterType));
+            }
+            if (items.length === 0) {
+                grid.innerHTML = '<div class="empty-state">No documents found.</div>';
+                return;
+            }
+            grid.innerHTML = items.map(d => {
+                const img = d.image_url || placeholderImage;
+                const gh = isGitHub(d.file_url);
+                const mg = isMega(d.file_url);
+                const links = `
+                    ${gh ? `<a href="${d.file_url}" target="_blank" rel="noopener" class="chip doc-link" data-id=\"${d.id}\"><i class=\"fab fa-github\"></i> GitHub</a>` : ''}
+                    ${mg ? `<a href="${d.file_url}" target="_blank" rel="noopener" class="chip doc-link" data-id=\"${d.id}\"><i class=\"fas fa-cloud\"></i> MEGA</a>` : ''}
+                    ${!gh && !mg && d.file_url ? `<a href="${d.file_url}" target="_blank" rel="noopener" class="chip doc-link" data-id=\"${d.id}\"><i class=\"fas fa-link\"></i> Link</a>` : ''}
+                `;
+                const tagsHtml = Array.isArray(d.tags) && d.tags.length ? `<div class=\"tags\">${d.tags.map(t => `<span class=\"tag\">${t}</span>`).join('')}</div>` : '';
+                const licenseHtml = d.license ? `<span class=\"badge\">${d.license}</span>` : '';
+                return `
+                <div class=\"card\">
+                    <div class=\"card-media\">
+                        <img src=\"${img}\" alt=\"Cover\" loading=\"lazy\" />
+                    </div>
+                    <div class=\"card-body\">
+                        <h3 class=\"card-title\">${d.title}</h3>
+                        <p class=\"card-desc\">${(d.description || '').slice(0, 140)}${(d.description || '').length > 140 ? '…' : ''}</p>
+                        ${tagsHtml}
+                        <div class=\"card-meta\">${licenseHtml}</div>
+                        <div class=\"card-meta\">
+                            <span><i class=\"fas fa-calendar\"></i> ${formatDate(d.created_at)}</span>
+                            <span><i class=\"fas fa-download\"></i> ${d.download_count || 0}</span>
+                        </div>
+                        <div class=\"card-actions\">${links}</div>
+                    </div>
+                </div>`;
+            }).join('');
+            // attach view increment
+            import('/src/js/supabase3.js').then(m => {
+                grid.querySelectorAll('.doc-link').forEach(a => {
+                    a.addEventListener('click', () => {
+                        const id = a.getAttribute('data-id');
+                        m.incrementDocumentViews(id);
+                    });
+                });
+            });
+        };
+
+        const setLoading = (loading) => {
+            applyBtn.disabled = loading;
+            resetBtn.disabled = loading;
+            programSelect.disabled = loading;
+            courseSelect.disabled = loading || !programSelect.value;
+            typeSelect.disabled = loading;
+            searchInput.disabled = loading;
+        };
+
+        const loadPrograms = async () => {
+            const res = await getPrograms();
+            if (!res.success) {
+                showMessage(res.message || 'Failed to load programs');
+                return;
+            }
+            programSelect.innerHTML = '<option value="">All programs</option>';
+            res.data.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.id;
+                opt.textContent = p.name;
+                programSelect.appendChild(opt);
+            });
+        };
+
+        const loadCourses = async (programId) => {
+            courseSelect.disabled = true;
+            courseSelect.innerHTML = '<option value="">All courses</option>';
+            if (!programId) return;
+            const { data, error } = await getCourses(programId, { limit: 500, offset: 0 });
+            if (error) {
+                showMessage(error.message || 'Failed to load courses');
+                return;
+            }
+            courseSelect.disabled = false;
+            courseSelect.innerHTML = '<option value="">All courses</option>';
+            data.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.id;
+                opt.textContent = `${c.code} - ${c.name}`;
+                courseSelect.appendChild(opt);
+            });
+        };
+
+        const getFilterState = () => ({
+            program_id: programSelect.value || undefined,
+            course_id: courseSelect.value || undefined,
+            status: 'approved',
+            is_public: true,
+            search: searchInput.value.trim() || undefined,
+            type: typeSelect.value || ''
+        });
+
+        const updatePagination = () => {
+            const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+            pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+            prevBtn.disabled = currentPage <= 1;
+            nextBtn.disabled = currentPage >= totalPages;
+        };
+
+        const refreshCount = async (filters) => {
+            const { data, error } = await countDocuments({
+                program_id: filters.program_id,
+                course_id: filters.course_id,
+                status: filters.status,
+                is_public: filters.is_public,
+                search: filters.search
+            });
+            if (!error && typeof data === 'number') totalCount = data;
+            updatePagination();
+        };
+
+        const loadDocuments = async () => {
+            try {
+                setLoading(true);
+                const filters = getFilterState();
+                const { data, error } = await getDocuments({
+                    program_id: filters.program_id,
+                    course_id: filters.course_id,
+                    status: filters.status,
+                    is_public: filters.is_public,
+                    search: filters.search
+                }, { page: currentPage, pageSize: PAGE_SIZE, orderBy: 'created_at', orderDir: 'desc' });
+                if (error) {
+                    showMessage(error.message || 'Failed to load documents');
+                    return;
+                }
+                renderCards(data, filters.type);
+                await refreshCount(filters);
+            } catch (e) {
+                showMessage(e.message || 'Unexpected error');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        programSelect.addEventListener('change', () => {
+            loadCourses(programSelect.value);
+        });
+
+        applyBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            currentPage = 1;
+            loadDocuments();
+        });
+
+        resetBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            programSelect.value = '';
+            courseSelect.innerHTML = '<option value="">All courses</option>';
+            courseSelect.disabled = true;
+            typeSelect.value = '';
+            searchInput.value = '';
+            currentPage = 1;
+            loadDocuments();
+        });
+
+        prevBtn.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage -= 1;
+                loadDocuments();
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+            if (currentPage < totalPages) {
+                currentPage += 1;
+                loadDocuments();
+            }
+        });
+
+        // Init
+        loadPrograms();
+        loadDocuments();
+    </script>
+</body>
+</html>
+

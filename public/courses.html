@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Courses (Admin) - OpenStudent</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/src/assets/css/admin.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="nav-container">
+                <div class="nav-brand">
+                    <a href="/"><i class="fas fa-graduation-cap"></i> OpenStudent</a>
+                </div>
+                <ul class="nav-links">
+                    <li><a href="/documents.html"><i class="fas fa-book"></i> Browse Documents</a></li>
+                    <li><a href="/upload.html"><i class="fas fa-cloud-upload-alt"></i> Upload</a></li>
+                    <li><a href="/programs.html"><i class="fas fa-layer-group"></i> Programs</a></li>
+                    <li><a href="/courses.html" class="active"><i class="fas fa-list"></i> Courses</a></li>
+                    <li><a href="/profile.html"><i class="fas fa-user"></i> Profile</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section class="page-section">
+            <div class="container-card">
+                <div class="section-header">
+                    <h1>Manage Courses</h1>
+                    <p>Select a program to view and add courses.</p>
+                </div>
+
+                <div id="message" class="message" style="display:none;"></div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="program-select" class="required">Program</label>
+                        <select id="program-select" required>
+                            <option value="">Loading programs...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <form id="course-form" class="form-grid">
+                    <div class="form-group">
+                        <label for="course-name" class="required">Course Name</label>
+                        <input id="course-name" type="text" placeholder="e.g., Data Structures" required maxlength="120">
+                    </div>
+                    <div class="form-group">
+                        <label for="course-code" class="required">Course Code</label>
+                        <input id="course-code" type="text" placeholder="e.g., CSDS201" required maxlength="32">
+                    </div>
+                    <div class="form-group">
+                        <label for="course-level" class="required">Level</label>
+                        <select id="course-level" required>
+                            <option value="">Select level</option>
+                            <option value="100">100</option>
+                            <option value="200">200</option>
+                            <option value="300">300</option>
+                            <option value="400">400</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="course-semester" class="required">Semester</label>
+                        <select id="course-semester" required>
+                            <option value="">Select semester</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                        </select>
+                    </div>
+                    <div class="form-actions">
+                        <button id="add-course-btn" class="btn primary" type="submit"><i class="fas fa-plus"></i> Add Course</button>
+                    </div>
+                </form>
+
+                <div class="list-header">
+                    <h2>Courses</h2>
+                    <button id="refresh-btn" class="btn"><i class="fas fa-rotate"></i> Refresh</button>
+                </div>
+
+                <div id="courses-list" class="list-grid"></div>
+            </div>
+        </section>
+    </main>
+
+    <script type="module">
+        import { getPrograms } from '/src/js/supabase.js';
+        import { getCourses, insertCourse } from '/src/js/supabase2.js';
+
+        const programSelect = document.getElementById('program-select');
+        const courseForm = document.getElementById('course-form');
+        const nameInput = document.getElementById('course-name');
+        const codeInput = document.getElementById('course-code');
+        const levelSelect = document.getElementById('course-level');
+        const semesterSelect = document.getElementById('course-semester');
+        const listEl = document.getElementById('courses-list');
+        const messageEl = document.getElementById('message');
+        const refreshBtn = document.getElementById('refresh-btn');
+
+        const showMessage = (text, type = 'error') => {
+            messageEl.className = `message ${type}`;
+            messageEl.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> ${text}`;
+            messageEl.style.display = 'block';
+            setTimeout(() => { messageEl.style.display = 'none'; }, 5000);
+        };
+
+        const loadPrograms = async () => {
+            programSelect.innerHTML = '<option value="">Loading programs...</option>';
+            const res = await getPrograms();
+            if (!res.success) {
+                programSelect.innerHTML = '<option value="">Failed to load programs</option>';
+                showMessage(res.message || 'Failed to load programs');
+                return;
+            }
+            programSelect.innerHTML = '<option value="">Select a program</option>';
+            res.data.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.id;
+                opt.textContent = p.name;
+                programSelect.appendChild(opt);
+            });
+        };
+
+        const renderCourses = (courses) => {
+            if (!courses || courses.length === 0) {
+                listEl.innerHTML = '<div class="empty-state">No courses found.</div>';
+                return;
+            }
+            listEl.innerHTML = courses.map(c => `
+                <div class="list-item">
+                    <div>
+                        <div class="item-title">${c.code} - ${c.name}</div>
+                        <div class="item-sub">Level ${c.level} • Semester ${c.semester}</div>
+                    </div>
+                </div>
+            `).join('');
+        };
+
+        const loadCoursesForProgram = async () => {
+            const programId = programSelect.value;
+            if (!programId) {
+                listEl.innerHTML = '<div class="empty-state">Select a program to view courses.</div>';
+                return;
+            }
+            const { data, error } = await getCourses(programId, { limit: 200, offset: 0 });
+            if (error) {
+                showMessage(error.message || 'Failed to load courses');
+                return;
+            }
+            renderCourses(data);
+        };
+
+        programSelect.addEventListener('change', loadCoursesForProgram);
+
+        courseForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const programId = programSelect.value;
+            if (!programId) {
+                showMessage('Please select a program first');
+                return;
+            }
+            const payload = {
+                name: nameInput.value.trim(),
+                code: codeInput.value.trim(),
+                program_id: programId,
+                level: parseInt(levelSelect.value, 10),
+                semester: parseInt(semesterSelect.value, 10)
+            };
+            const { data, error } = await insertCourse(payload);
+            if (error) {
+                showMessage(error.message || 'Failed to add course');
+                return;
+            }
+            showMessage('Course added', 'success');
+            nameInput.value = '';
+            codeInput.value = '';
+            levelSelect.value = '';
+            semesterSelect.value = '';
+            loadCoursesForProgram();
+        });
+
+        refreshBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            loadCoursesForProgram();
+        });
+
+        loadPrograms().then(loadCoursesForProgram);
+    </script>
+</body>
+</html>
+

@@ -322,7 +322,7 @@ export const getProfile = async () => {
 
     const { data: profile, error } = await supabase
       .from('users')
-      .select('id, email, full_name, role, university_id, program_id, avatar_url, created_at, updated_at')
+      .select('id, email, full_name, role, active, university_id, program_id, avatar_url, created_at, updated_at')
       .eq('id', session.user.id)
       .single()
 

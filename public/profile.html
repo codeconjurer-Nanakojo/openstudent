@@ -3,492 +3,168 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profile - OpenStudent</title>
+    <title>My Profile - OpenStudent</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root {
-            --primary: #2563eb;
-            --primary-dark: #1d4ed8;
-            --secondary: #64748b;
-            --light: #f8fafc;
-            --dark: #1e293b;
-            --accent: #f59e0b;
-            --border-radius: 8px;
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            --transition: all 0.3s ease;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        body {
-            background-color: var(--light);
-            color: var(--dark);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .header {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            color: white;
-            padding: 1.5rem;
-            text-align: center;
-            box-shadow: var(--shadow);
-        }
-
-        .logo {
-            font-size: 2.2rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-        }
-
-        .tagline {
-            font-size: 1.1rem;
-            opacity: 0.9;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 2rem;
-            flex: 1;
-        }
-
-        .card {
-            background: white;
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-            overflow: hidden;
-            margin-bottom: 2rem;
-            transition: var(--transition);
-        }
-
-        .card:hover {
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-        }
-
-        .card-header {
-            background: var(--primary);
-            color: white;
-            padding: 1.8rem 2rem;
-        }
-
-        .card-header h2 {
-            font-size: 1.8rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .card-body {
-            padding: 2rem;
-        }
-
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-            color: var(--dark);
-        }
-
-        .input-with-icon {
-            position: relative;
-        }
-
-        .input-with-icon i {
-            position: absolute;
-            left: 14px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--secondary);
-        }
-
-        .input-with-icon input, .input-with-icon select {
-            padding-left: 40px;
-        }
-
-        input, select {
-            width: 100%;
-            padding: 14px;
-            border: 1px solid #ddd;
-            border-radius: var(--border-radius);
-            font-size: 1rem;
-            transition: var(--transition);
-        }
-
-        input:focus, select:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
-        }
-
-        input:read-only {
-            background-color: #f5f5f5;
-            cursor: not-allowed;
-        }
-
-        .error-message {
-            color: #e74c3c;
-            font-size: 0.85rem;
-            margin-top: 0.5rem;
-            display: none;
-        }
-
-        .btn {
-            display: inline-block;
-            padding: 12px 24px;
-            border: none;
-            border-radius: var(--border-radius);
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: var(--transition);
-            text-align: center;
-        }
-
-        .btn-primary {
-            background: var(--primary);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: var(--primary-dark);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-        }
-
-        .btn-secondary {
-            background: var(--secondary);
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background: #5a6268;
-            transform: translateY(-2px);
-        }
-
-        .btn-accent {
-            background: var(--accent);
-            color: white;
-        }
-
-        .btn-accent:hover {
-            background: #e57e0b;
-            transform: translateY(-2px);
-        }
-
-        .alert {
-            padding: 12px 16px;
-            border-radius: var(--border-radius);
-            margin-bottom: 1.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .alert-error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        .alert-warning {
-            background: #fff3cd;
-            color: #856404;
-            border: 1px solid #ffeeba;
-        }
-
-        .alert .close {
-            background: none;
-            border: none;
-            font-size: 1.2rem;
-            cursor: pointer;
-            color: inherit;
-        }
-
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: white;
-            animation: spin 1s ease-in-out infinite;
-            margin-right: 10px;
-            vertical-align: middle;
-            display: none;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .footer {
-            background: var(--dark);
-            color: white;
-            text-align: center;
-            padding: 1.5rem;
-            margin-top: auto;
-        }
-
-        .form-row {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .form-row .form-group {
-            flex: 1;
-            margin-bottom: 0;
-        }
-
-        .profile-actions {
-            display: flex;
-            gap: 1rem;
-            margin-top: 2rem;
-        }
-
-        .avatar-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-bottom: 2rem;
-        }
-
-        .avatar {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 3px solid var(--primary);
-            margin-bottom: 1rem;
-        }
-
-        .avatar-upload {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .file-input {
-            display: none;
-        }
-
-        .file-label {
-            background: var(--accent);
-            color: white;
-            padding: 8px 16px;
-            border-radius: var(--border-radius);
-            cursor: pointer;
-            transition: var(--transition);
-        }
-
-        .file-label:hover {
-            background: #e57e0b;
-        }
-
-        .placeholder-section {
-            margin-top: 2rem;
-            padding-top: 2rem;
-            border-top: 1px solid #eee;
-        }
-
-        .placeholder-section h3 {
-            margin-bottom: 1rem;
-            color: var(--primary);
-        }
-
-        .placeholder-content {
-            background: #f9f9f9;
-            padding: 1.5rem;
-            border-radius: var(--border-radius);
-            border-left: 4px solid var(--accent);
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                padding: 1rem;
-            }
-
-            .form-row {
-                flex-direction: column;
-                gap: 1.5rem;
-            }
-
-            .profile-actions {
-                flex-direction: column;
-            }
-        }
-    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/src/assets/css/profile.css">
 </head>
 <body>
-    <div class="header">
-        <div class="logo">
-            <i class="fas fa-graduation-cap"></i>
-            <span>OpenStudent</span>
-        </div>
-        <div class="tagline">Ghana's Academic Archive Platform</div>
-    </div>
-
-    <div class="container">
-        <div id="reminderBanner" class="alert alert-warning" style="display: none;">
-            <div>
-                <i class="fas fa-exclamation-circle"></i>
-                <span id="reminderText">Please complete your profile to unlock full contributor features.</span>
+    <header>
+        <nav>
+            <div class="nav-container">
+                <div class="nav-brand">
+                    <a href="/"><i class="fas fa-graduation-cap"></i> OpenStudent</a>
+                </div>
+                <ul class="nav-links">
+                    <li><a href="/documents.html"><i class="fas fa-book"></i> Browse Documents</a></li>
+                    <li><a href="/upload.html"><i class="fas fa-cloud-upload-alt"></i> Upload</a></li>
+                    <li><a href="/profile.html" class="active"><i class="fas fa-user"></i> Profile</a></li>
+                </ul>
             </div>
-            <button class="close" onclick="document.getElementById('reminderBanner').style.display = 'none'">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
+        </nav>
+    </header>
 
-        <div class="card">
-            <div class="card-header">
-                <h2>Your Profile</h2>
-                <p>Manage your account information</p>
+    <main>
+        <section class="page-section">
+            <div class="container-card">
+                <div class="profile-header">
+                    <img id="avatar" class="avatar" alt="Avatar" />
+                    <div>
+                        <h1 id="display-name">My Profile</h1>
+                        <p id="display-email" class="muted"></p>
+                        <button id="edit-profile-btn" class="btn"><i class="fas fa-edit"></i> Edit Profile</button>
+                    </div>
+                </div>
+
+                <div id="message" class="message" style="display:none;"></div>
+
+                <!-- Profile Edit Form -->
+                <div id="profile-edit-form" class="profile-edit-form">
+                    <h3>Edit Profile</h3>
+                    <form id="profile-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="fullName">Full Name</label>
+                                <div class="input-with-icon">
+                                    <i class="fas fa-user"></i>
+                                    <input type="text" id="fullName" placeholder="Enter your full name" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="email">Email Address</label>
+                                <div class="input-with-icon">
+                                    <i class="fas fa-envelope"></i>
+                                    <input type="email" id="email" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="university">University</label>
+                                <div class="input-with-icon">
+                                    <i class="fas fa-university"></i>
+                                    <select id="university" required>
+                                        <option value="">Select your university</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="program">Program</label>
+                                <div class="input-with-icon">
+                                    <i class="fas fa-graduation-cap"></i>
+                                    <select id="program" required>
+                                        <option value="">Select your program</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn primary"><i class="fas fa-save"></i> Save Changes</button>
+                            <button type="button" id="cancel-edit-btn" class="btn">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Analytics Section -->
+                <div class="analytics-grid" id="contrib-analytics">
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-total">0</div>
+                        <div class="stat-label">Total Uploads</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-views">0</div>
+                        <div class="stat-label">Total Views</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-types">-</div>
+                        <div class="stat-label">Types Breakdown</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-downloads">0</div>
+                        <div class="stat-label">Total Downloads</div>
+                    </div>
+                </div>
+
+                <!-- Charts Section -->
+                <div class="charts-container">
+                    <div style="display:flex; justify-content:flex-end; margin-bottom:.5rem; gap:.5rem; align-items:center">
+                        <label for="contrib-time-window" class="muted">Time window</label>
+                        <select id="contrib-time-window" class="btn" title="Time window">
+                            <option value="all">All time</option>
+                            <option value="7d">Last 7 days</option>
+                            <option value="30d">Last 30 days</option>
+                            <option value="semester">This semester</option>
+                        </select>
+                    </div>
+                    <div class="chart-card">
+                        <h3>Views Over Time</h3>
+                        <div style="height:180px"><canvas id="chart-views"></canvas></div>
+                    </div>
+                    <div class="chart-card">
+                        <h3>Uploads by Course</h3>
+                        <div style="height:180px"><canvas id="chart-courses"></canvas></div>
+                    </div>
+                </div>
+
+                <!-- Badges Section -->
+                <div class="badge-container" id="badges"></div>
+
+                <!-- Insights Section -->
+                <div id="insights" class="container-card">
+                    <h3>Insights</h3>
+                    <div class="insights-item">
+                        <i class="fas fa-chart-line"></i> <span id="most-viewed">Most viewed: -</span>
+                    </div>
+                    <div class="insights-item">
+                        <i class="fas fa-download"></i> <span id="most-downloaded">Most downloaded: -</span>
+                    </div>
+                    <div class="insights-item">
+                        <i class="fas fa-trophy"></i> <span id="progression">-</span>
+                    </div>
+                </div>
+
+                <!-- Uploads Section -->
+                <div class="list-header">
+                    <h2>My Uploads</h2>
+                    <div class="actions-inline">
+                        <button id="refresh-btn" class="btn"><i class="fas fa-rotate"></i> Refresh</button>
+                        <a href="/upload.html" class="btn primary"><i class="fas fa-plus"></i> New Upload</a>
+                    </div>
+                </div>
+
+                <div id="uploads-grid" class="list-grid">
+                    <!-- Upload items will be dynamically inserted here -->
+                </div>
+
+                <div class="pagination">
+                    <button id="prev-page" class="btn" disabled><i class="fas fa-chevron-left"></i> Prev</button>
+                    <span id="page-info">Page 1</span>
+                    <button id="next-page" class="btn" disabled>Next <i class="fas fa-chevron-right"></i></button>
+                </div>
             </div>
-            <div class="card-body">
-                <div id="alertSuccess" class="alert alert-success" style="display: none;">
-                    <i class="fas fa-check-circle"></i>
-                    <span>Profile updated successfully!</span>
-                    <button class="close" onclick="document.getElementById('alertSuccess').style.display = 'none'">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div id="alertError" class="alert alert-error" style="display: none;">
-                    <i class="fas fa-exclamation-circle"></i>
-                    <span id="errorText"></span>
-                    <button class="close" onclick="document.getElementById('alertError').style.display = 'none'">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
+        </section>
+    </main>
 
-                <div class="avatar-container">
-                    <img id="avatarImage" class="avatar" src="https://ik.imagekit.io/default-avatar.png" alt="Profile Picture">
-                    <div class="avatar-upload">
-                        <input type="file" id="avatarUpload" class="file-input" accept="image/*">
-                        <label for="avatarUpload" class="file-label">
-                            <i class="fas fa-upload"></i> Upload Photo
-                        </label>
-                        <small>JPG, PNG or GIF - Max 5MB</small>
-                    </div>
-                </div>
-
-                <form id="profileForm">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="fullName">Full Name</label>
-                            <div class="input-with-icon">
-                                <i class="fas fa-user"></i>
-                                <input type="text" id="fullName" placeholder="Enter your full name" required>
-                            </div>
-                            <div class="error-message" id="nameError">Please enter your full name</div>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="email">Email Address</label>
-                            <div class="input-with-icon">
-                                <i class="fas fa-envelope"></i>
-                                <input type="email" id="email" readonly>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="university">University</label>
-                            <div class="input-with-icon">
-                                <i class="fas fa-university"></i>
-                                <select id="university" required>
-                                    <option value="">Select your university</option>
-                                </select>
-                            </div>
-                            <div class="error-message" id="universityError">Please select your university</div>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="program">Program</label>
-                            <div class="input-with-icon">
-                                <i class="fas fa-graduation-cap"></i>
-                                <select id="program" required>
-                                    <option value="">Select your program</option>
-                                </select>
-                            </div>
-                            <div class="error-message" id="programError">Please select your program</div>
-                        </div>
-                    </div>
-
-                    <!-- Custom Program Input (hidden by default) -->
-                    <div id="customProgramContainer" class="form-group" style="display: none;">
-                        <label for="customProgramInput">Specify Your Program</label>
-                        <div class="input-with-icon">
-                            <i class="fas fa-pencil-alt"></i>
-                            <input type="text" id="customProgramInput" placeholder="Enter your program name">
-                        </div>
-                        <div class="error-message" id="customProgramError">Please specify your program</div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="role">Account Role</label>
-                        <div class="input-with-icon">
-                            <i class="fas fa-user-tag"></i>
-                            <input type="text" id="role" value="Contributor" readonly>
-                        </div>
-                    </div>
-
-                    <div class="profile-actions">
-                        <button type="submit" class="btn btn-primary" id="saveBtn">
-                            <span class="loading" id="submitLoading"></span>
-                            <span>Save Changes</span>
-                        </button>
-                        <button type="button" class="btn btn-secondary" id="logoutBtn">
-                            <i class="fas fa-sign-out-alt"></i> Logout
-                        </button>
-                    </div>
-                </form>
-
-                <!-- Placeholder sections for future expansion -->
-                <div class="placeholder-section">
-                    <h3>Notification Preferences</h3>
-                    <div class="placeholder-content">
-                        <p>Customize how you receive notifications about your contributions and platform updates.</p>
-                        <button class="btn btn-accent" disabled>Coming Soon</button>
-                    </div>
-                </div>
-
-                <div class="placeholder-section">
-                    <h3>Security Settings</h3>
-                    <div class="placeholder-content">
-                        <p>Manage your account security with two-factor authentication and session management.</p>
-                        <button class="btn btn-accent" disabled>Coming Soon</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="footer">
-        <p>&copy; 2023 OpenStudent. Connecting Ghanaian Universities.</p>
-    </div>
-
-    <!-- External JavaScript file -->
-    <script type="module" src="/src/js/profile.js"></script>
+<script src="/src/js/profile.js" type="module"></script>
 </body>
 </html>

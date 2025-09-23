@@ -349,6 +349,41 @@
             margin-right: 0.5rem;
         }
 
+        /* Inline field error */
+        .error-text {
+            color: var(--error);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            display: none;
+        }
+
+        .invalid {
+            border-color: var(--error) !important;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
+        }
+
+        /* Onboarding modal */
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.4);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+        }
+        .modal {
+            background: #fff;
+            width: 96%;
+            max-width: 720px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+        }
+        .modal-header { padding: 1rem 1.5rem; background: var(--primary-light); }
+        .modal-body { padding: 1.5rem; }
+        .modal-actions { padding: 1rem 1.5rem; display: flex; gap: .75rem; justify-content: flex-end; }
+
         /* Responsive Design */
         @media (max-width: 768px) {
             .nav-container {
@@ -446,6 +481,25 @@
                 <div id="message" class="message"></div>
 
                 <form id="upload-form">
+                    <!-- Onboarding Modal (first-time contributors) -->
+                    <div id="onboarding" class="modal-backdrop">
+                        <div class="modal">
+                            <div class="modal-header"><h3>Contributor Guidelines</h3></div>
+                            <div class="modal-body">
+                                <ul style="margin-left:1rem; list-style: disc;">
+                                    <li>Provide a clear title and description.</li>
+                                    <li>Cover image/video is required.</li>
+                                    <li>At least one source is required: GitHub or MEGA.</li>
+                                    <li>Ensure you own rights to share this content.</li>
+                                    <li>Select an appropriate license; materials will be public.</li>
+                                </ul>
+                            </div>
+                            <div class="modal-actions">
+                                <button id="onboarding-cancel" type="button" class="btn">Cancel</button>
+                                <button id="onboarding-accept" type="button" class="btn primary">I Understand</button>
+                            </div>
+                        </div>
+                    </div>
                     <div class="form-row">
                         <!-- Program Selection -->
                         <div class="form-group">
@@ -504,6 +558,21 @@
                         ></textarea>
                     </div>
 
+                    <!-- License -->
+                    <div class="form-group">
+                        <label for="document-license" class="required">License</label>
+                        <select id="document-license" required>
+                            <option value="">Select a license</option>
+                            <option value="MIT">MIT</option>
+                            <option value="CC-BY-4.0">CC-BY 4.0</option>
+                            <option value="CC-BY-SA-4.0">CC-BY-SA 4.0</option>
+                            <option value="GPL-3.0">GPL-3.0</option>
+                            <option value="Apache-2.0">Apache-2.0</option>
+                            <option value="Proprietary">Proprietary (you retain all rights)</option>
+                        </select>
+                        <div id="license-error" class="error-text">Please select a license.</div>
+                    </div>
+
                     <!-- Abstract (Optional) -->
                     <div class="form-group">
                         <label for="document-abstract">Abstract (Optional)</label>
@@ -525,6 +594,20 @@
                         <div class="tags-hint">Add up to 10 tags to help others find your document</div>
                     </div>
 
+                    <!-- Cover Media Upload (Required) -->
+                    <div class="form-group">
+                        <label class="required">Cover Image/Video</label>
+                        <div class="input-container" style="display:block">
+                            <input type="file" id="cover-file" accept="image/*,video/*">
+                            <div id="cover-selected" class="selected-file" style="display: none;">
+                                <i class="fas fa-image"></i>
+                                <span></span>
+                            </div>
+                            <div id="cover-error" class="error-text">Cover image or video is required.</div>
+                        </div>
+                    </div>
+
+                    <!-- Project Source (at least one required) -->
                     <!-- File Upload Section -->
                     <div class="form-group">
                         <label class="required">Upload Method</label>
@@ -565,6 +648,7 @@
                                     placeholder="https://github.com/username/repository"
                                     pattern="https://github\.com/.+"
                                 >
+                                <div id="github-error" class="error-text">Enter a valid GitHub repository URL.</div>
                             </div>
 
                             <!-- MEGA Upload will be handled separately -->
@@ -574,6 +658,7 @@
                                     <i class="fas fa-file"></i>
                                     <span></span>
                                 </div>
+                                <div id="mega-error" class="error-text">Select a file for MEGA upload.</div>
                             </div>
                         </div>
                     </div>
@@ -593,6 +678,7 @@
         import { supabase, getPrograms, getCurrentUser, signOut } from '../src/js/supabase.js';
         import * as db from '../src/js/supabase2.js';
         import { uploadImage } from '../src/js/imagekit.js';
+        import { uploadToMega, validateMegaLink } from '../src/js/supabase3.js';
 
         // DOM Elements
         const programSelect = document.getElementById('program-select');
@@ -601,6 +687,7 @@
         const documentTitle = document.getElementById('document-title');
         const documentDescription = document.getElementById('document-description');
         const documentAbstract = document.getElementById('document-abstract');
+        const documentLicense = document.getElementById('document-license');
         const documentTags = document.getElementById('document-tags');
         const uploadForm = document.getElementById('upload-form');
         const submitBtn = document.getElementById('submit-btn');
@@ -618,11 +705,23 @@
         const megaInputWrapper = document.getElementById('mega-input-wrapper');
         const megaFileInput = document.getElementById('mega-file-input');
         const megaSelectedFile = document.getElementById('mega-selected-file');
+        const coverInput = document.getElementById('cover-file');
+        const coverSelected = document.getElementById('cover-selected');
+        const coverError = document.getElementById('cover-error');
+        const githubError = document.getElementById('github-error');
+        const megaError = document.getElementById('mega-error');
+        const licenseError = document.getElementById('license-error');
+
+        // Onboarding elements
+        const onboardingBackdrop = document.getElementById('onboarding');
+        const onboardingAccept = document.getElementById('onboarding-accept');
+        const onboardingCancel = document.getElementById('onboarding-cancel');
 
         // State
         let selectedUploadMethod = null;
         let currentUser = null;
         let uploadedFiles = [];
+        let coverFile = null;
 
         // Utility Functions
         const showMessage = (text, type = 'error') => {
@@ -640,6 +739,7 @@
             submitBtn.innerHTML = loading ?
                 '<div class="loading-spinner" id="loading-spinner"></div> Uploading...' :
                 '<i class="fas fa-cloud-upload-alt"></i> Upload Document';
+            Array.from(uploadForm.elements).forEach(el => { if (el !== submitBtn) el.disabled = loading; });
         };
 
         const parseTagsString = (tagsStr) => {
@@ -819,10 +919,41 @@
 
         // Handle MEGA Upload (placeholder)
         const handleMegaUpload = async () => {
-            // This would integrate with backend/mega/upload.js
-            // For now, return an error
-            throw new Error('MEGA upload is not yet implemented. Please use file upload or GitHub.');
+            if (uploadedFiles.length === 0) throw new Error('Please select a file for MEGA upload.');
+            const [file] = uploadedFiles;
+            const result = await uploadToMega(file, (p) => {
+                submitBtn.innerHTML = `<div class=\"loading-spinner\" id=\"loading-spinner\"></div> Uploading to MEGA… ${p}%`;
+            });
+            if (!result.success) throw new Error(result.message || 'MEGA upload failed');
+            return [result.link];
         };
+
+        // Handle Cover Upload (Image/Video via ImageKit)
+        const handleCoverUpload = async () => {
+            if (!coverFile) throw new Error('Cover media is required.');
+            const isMedia = coverFile.type.startsWith('image/') || coverFile.type.startsWith('video/');
+            if (!isMedia) throw new Error('Cover must be an image or video.');
+            const result = await uploadImage(coverFile, { folder: '/documents/covers', prefix: 'cover' });
+            if (!result.success) throw new Error(result.message || 'Failed to upload cover media.');
+            return result.url;
+        };
+
+        // Cover selection handler
+        coverInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                coverFile = file;
+                coverSelected.querySelector('span').textContent = `${file.name} (${Math.round(file.size / 1024)}KB)`;
+                coverSelected.style.display = 'block';
+                coverInput.classList.remove('invalid');
+                coverError.style.display = 'none';
+            } else {
+                coverFile = null;
+                coverSelected.style.display = 'none';
+                coverInput.classList.add('invalid');
+                coverError.style.display = 'block';
+            }
+        });
 
         // Form Submission
         uploadForm.addEventListener('submit', async (e) => {
@@ -842,6 +973,19 @@
                     throw new Error('Please fill in all required fields.');
                 }
 
+                if (!documentLicense.value) {
+                    documentLicense.classList.add('invalid');
+                    licenseError.style.display = 'block';
+                    throw new Error('Please select a license.');
+                }
+
+                // Validate cover media required
+                if (!coverFile) {
+                    coverInput.classList.add('invalid');
+                    coverError.style.display = 'block';
+                    throw new Error('Cover image or video is required.');
+                }
+
                 if (!selectedUploadMethod) {
                     throw new Error('Please select an upload method.');
                 }
@@ -852,6 +996,8 @@
                 switch (selectedUploadMethod) {
                     case 'file':
                         if (uploadedFiles.length === 0) {
+                            megaError.style.display = 'none';
+                            githubError.style.display = 'none';
                             throw new Error('Please select at least one file to upload.');
                         }
                         fileUrls = await handleFileUploads();
@@ -859,6 +1005,8 @@
 
                     case 'github':
                         if (!githubUrl.value.trim()) {
+                            githubUrl.classList.add('invalid');
+                            githubError.style.display = 'block';
                             throw new Error('Please enter a GitHub repository URL.');
                         }
                         fileUrls = [githubUrl.value.trim()];
@@ -866,11 +1014,16 @@
 
                     case 'mega':
                         if (uploadedFiles.length === 0) {
+                            megaFileInput.classList.add('invalid');
+                            megaError.style.display = 'block';
                             throw new Error('Please select a file for MEGA upload.');
                         }
                         fileUrls = await handleMegaUpload();
                         break;
                 }
+
+                // Upload cover
+                const coverUrl = await handleCoverUpload();
 
                 // Prepare document data
                 const docData = {
@@ -878,6 +1031,8 @@
                     description: documentDescription.value.trim(),
                     abstract: documentAbstract.value.trim() || null,
                     file_url: fileUrls[0], // Primary file URL
+                    image_url: coverUrl,
+                    license: documentLicense.value,
                     course_id: courseSelect.value,
                     contributor_id: currentUser.id,
                     tags: parseTagsString(documentTags.value),
@@ -951,8 +1106,22 @@
         const initializePage = async () => {
             if (await checkAuthentication()) {
                 await loadPrograms();
+                // Show onboarding once per session (simple localStorage flag; server flag can replace later)
+                const seen = localStorage.getItem('onboarding-seen');
+                if (!seen) {
+                    onboardingBackdrop.style.display = 'flex';
+                }
             }
         };
+
+        // Onboarding events
+        onboardingAccept?.addEventListener('click', () => {
+            localStorage.setItem('onboarding-seen', '1');
+            onboardingBackdrop.style.display = 'none';
+        });
+        onboardingCancel?.addEventListener('click', () => {
+            onboardingBackdrop.style.display = 'none';
+        });
 
         // Start initialization
         initializePage().catch(error => {

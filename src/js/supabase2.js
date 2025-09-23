@@ -155,6 +155,118 @@ export async function insertCourse(courseData) {
   }
 }
 
+/**
+ * Update a course (admin only via RLS)
+ * @param {string} courseId
+ * @param {Object} updates - Any of: code, name, description, level, semester, credits, is_active
+ */
+export async function updateCourse(courseId, updates) {
+  try {
+    if (!courseId || !updates) return { data: null, error: new Error('courseId and updates required') }
+    const { data, error } = await supabase
+      .from('courses')
+      .update({
+        code: updates.code,
+        name: updates.name,
+        description: updates.description,
+        level: updates.level,
+        semester: updates.semester,
+        credits: updates.credits,
+        is_active: updates.is_active
+      })
+      .eq('id', courseId)
+      .select('id, code, name, level, semester, is_active')
+      .single()
+    if (error) return { data: null, error }
+    return { data, error: null }
+  } catch (err) {
+    return { data: null, error: err }
+  }
+}
+
+/**
+ * Delete a course (admin only via RLS)
+ */
+export async function deleteCourse(courseId) {
+  try {
+    if (!courseId) return { data: null, error: new Error('courseId required') }
+    const { data, error } = await supabase
+      .from('courses')
+      .delete()
+      .eq('id', courseId)
+      .select('id')
+      .single()
+    if (error) return { data: null, error }
+    return { data, error: null }
+  } catch (err) {
+    return { data: null, error: err }
+  }
+}
+
+// =====================================
+// PROGRAMS FUNCTIONS (admin)
+// =====================================
+
+export async function listPrograms() {
+  try {
+    const { data, error } = await supabase
+      .from('programs')
+      .select('id, name')
+      .order('name', { ascending: true })
+    if (error) return { data: null, error }
+    return { data: data || [], error: null }
+  } catch (err) {
+    return { data: null, error: err }
+  }
+}
+
+export async function createProgram(name) {
+  try {
+    if (!name) return { data: null, error: new Error('Program name required') }
+    const { data, error } = await supabase
+      .from('programs')
+      .insert([{ name }])
+      .select('id, name')
+      .single()
+    if (error) return { data: null, error }
+    return { data, error: null }
+  } catch (err) {
+    return { data: null, error: err }
+  }
+}
+
+export async function updateProgram(programId, name) {
+  try {
+    if (!programId || !name) return { data: null, error: new Error('programId and name required') }
+    const { data, error } = await supabase
+      .from('programs')
+      .update({ name })
+      .eq('id', programId)
+      .select('id, name')
+      .single()
+    if (error) return { data: null, error }
+    return { data, error: null }
+  } catch (err) {
+    return { data: null, error: err }
+  }
+}
+
+export async function deleteProgram(programId) {
+  try {
+    if (!programId) return { data: null, error: new Error('programId required') }
+    const { data, error } = await supabase
+      .from('programs')
+      .delete()
+      .eq('id', programId)
+      .select('id')
+      .single()
+    if (error) return { data: null, error }
+    return { data, error: null }
+  } catch (err) {
+    return { data: null, error: err }
+  }
+}
+
 // =====================================
 // DOCUMENTS (PROJECTS) FUNCTIONS
 // =====================================
@@ -181,6 +293,8 @@ export async function getDocuments(filters = {}, options = {}) {
         file_url,
         file_size,
         image_url,
+        views,
+        license,
         course_id,
         contributor_id,
         status,
@@ -223,6 +337,8 @@ export async function getDocuments(filters = {}, options = {}) {
           file_url,
           file_size,
           image_url,
+          views,
+          license,
           course_id,
           contributor_id,
           status,
@@ -350,6 +466,7 @@ export async function insertDocument(docData) {
         file_url: docData.file_url,
         file_size: docData.file_size || null,
         image_url: docData.image_url || null,
+        license: docData.license || null,
         course_id: docData.course_id,
         contributor_id: docData.contributor_id,
         team_id: docData.team_id || null,
@@ -366,6 +483,8 @@ export async function insertDocument(docData) {
         file_url,
         file_size,
         image_url,
+        views,
+        license,
         course_id,
         contributor_id,
         team_id,
@@ -385,6 +504,37 @@ export async function insertDocument(docData) {
     return { data, error: null }
   } catch (err) {
     console.warn('Unexpected error in insertDocument:', err.message)
+    return { data: null, error: err }
+  }
+}
+
+/**
+ * Update a document's status (admin/moderator only via RLS)
+ * @param {string} docId - Document UUID
+ * @param {string} status - New status ('approved' | 'rejected' | 'pending')
+ * @returns {Promise<{data: {id: string, status: string}|null, error: Error|null}>}
+ */
+export async function updateDocumentStatus(docId, status) {
+  try {
+    if (!docId || !status) {
+      return { data: null, error: new Error('Document ID and status are required') }
+    }
+
+    const { data, error } = await supabase
+      .from('projects')
+      .update({ status })
+      .eq('id', docId)
+      .select('id, status')
+      .single()
+
+    if (error) {
+      console.warn('Error updating document status:', error.message)
+      return { data: null, error }
+    }
+
+    return { data, error: null }
+  } catch (err) {
+    console.warn('Unexpected error in updateDocumentStatus:', err.message)
     return { data: null, error: err }
   }
 }
