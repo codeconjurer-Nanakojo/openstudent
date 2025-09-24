@@ -18,6 +18,7 @@
                     <li><a href="/documents.html"><i class="fas fa-book"></i> Browse</a></li>
                     <li><a href="/upload.html"><i class="fas fa-cloud-upload-alt"></i> Upload</a></li>
                     <li><a href="/admin.html" class="active"><i class="fas fa-shield-halved"></i> Admin</a></li>
+                    <li><a href="#" id="nav-logout"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
                 </ul>
             </div>
         </nav>
@@ -66,6 +67,7 @@
                     <button class="btn tab-btn" id="tab-users">Users</button>
                     <button class="btn tab-btn" id="tab-projects">Projects</button>
                     <button class="btn tab-btn" id="tab-catalog">Catalog</button>
+                    <button class="btn tab-btn" id="tab-leaderboards">Leaderboards</button>
                 </div>
 
                 <div class="filters-grid" id="docs-filters">
@@ -177,6 +179,33 @@
                                 </div>
                             </div>
                             <div id="courses-list" class="list-grid"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="leaderboards-panel" style="display:none; margin-top:1rem;">
+                    <div class="list-header">
+                        <h2>Leaderboards</h2>
+                        <div class="actions-inline">
+                            <label for="lb-window" class="muted">Time window</label>
+                            <select id="lb-window" class="btn">
+                                <option value="7d">Last 7 days</option>
+                                <option value="30d">Last 30 days</option>
+                                <option value="semester">This semester</option>
+                                <option value="all">All time</option>
+                            </select>
+                            <button id="lb-export-csv" class="btn"><i class="fas fa-file-csv"></i> CSV</button>
+                            <button id="lb-export-json" class="btn"><i class="fas fa-file-code"></i> JSON</button>
+                        </div>
+                    </div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+                        <div class="container-card" style="padding:1rem;">
+                            <h3>Top Contributors</h3>
+                            <div id="lb-contributors" class="list-grid"></div>
+                        </div>
+                        <div class="container-card" style="padding:1rem;">
+                            <h3>Top Projects</h3>
+                            <div id="lb-projects" class="list-grid"></div>
                         </div>
                     </div>
                 </div>

@@ -1,7 +1,7 @@
 
-        import { getPrograms, getProfile } from '/src/js/supabase.js';
+        import { getPrograms, getProfile, signOut, getCurrentUser } from '/src/js/supabase.js';
         import { getCourses, getDocuments, countDocuments, updateDocumentStatus, deleteDocument, listPrograms, createProgram, updateProgram, deleteProgram, insertCourse, updateCourse, deleteCourse } from '/src/js/supabase2.js';
-        import { getAdminAnalytics, getAllUsers, updateUserRole, updateUserActive, getAllProjects, getProjectStatusCounts, getUploadsPerProgram, getUserByEmail, getModerationHistory, logModerationAction, getAllCoursesMinimal, countProjects } from '/src/js/supabase3.js';
+        import { getAdminAnalytics, getAllUsers, updateUserRole, updateUserActive, getAllProjects, getProjectStatusCounts, getUploadsPerProgram, getUserByEmail, getModerationHistory, logModerationAction, getAllCoursesMinimal, countProjects, getTopContributors, getTopProjects } from '/src/js/supabase3.js';
         import { timeWindows } from '/src/js/config.js';
         import { getUniversities } from '/src/js/supabase.js';
         import { loadChartJs, renderPie, renderBar } from '/src/js/charts.js';
@@ -31,6 +31,7 @@
         const tabDocs = document.getElementById('tab-docs');
         const tabUsers = document.getElementById('tab-users');
         const tabProjects = document.getElementById('tab-projects');
+        const tabLeaderboards = document.getElementById('tab-leaderboards');
         const projectsPanel = document.getElementById('projects-panel');
         const projectsList = document.getElementById('projects-list');
         const refreshProjects = document.getElementById('refresh-projects');
@@ -47,6 +48,13 @@
         const chartProgramsEl = document.getElementById('chart-programs');
         const timeWindowSelect = document.getElementById('time-window');
         let chartStatus, chartPrograms;
+        const navLogout = document.getElementById('nav-logout');
+        const lbPanel = document.getElementById('leaderboards-panel');
+        const lbWindow = document.getElementById('lb-window');
+        const lbContrib = document.getElementById('lb-contributors');
+        const lbProjects = document.getElementById('lb-projects');
+        const lbExportCsv = document.getElementById('lb-export-csv');
+        const lbExportJson = document.getElementById('lb-export-json');
 
         const PAGE_SIZE = 12;
         let currentPage = 1;
@@ -384,6 +392,7 @@
         tabUsers.addEventListener('click', () => { document.getElementById('docs-filters').style.display='none'; document.getElementById('documents-grid').style.display='none'; projectsPanel.style.display='none'; document.getElementById('catalog-panel').style.display='none'; usersPanel.style.display='block'; loadUsers(); });
         tabProjects.addEventListener('click', () => { document.getElementById('docs-filters').style.display='none'; document.getElementById('documents-grid').style.display='none'; usersPanel.style.display='none'; document.getElementById('catalog-panel').style.display='none'; projectsPanel.style.display='block'; loadProjects(); });
         document.getElementById('tab-catalog').addEventListener('click', () => { document.getElementById('docs-filters').style.display='none'; document.getElementById('documents-grid').style.display='none'; usersPanel.style.display='none'; projectsPanel.style.display='none'; document.getElementById('catalog-panel').style.display='block'; loadCatalog(); });
+        tabLeaderboards.addEventListener('click', () => { document.getElementById('docs-filters').style.display='none'; document.getElementById('documents-grid').style.display='none'; usersPanel.style.display='none'; projectsPanel.style.display='none'; document.getElementById('catalog-panel').style.display='none'; lbPanel.style.display='block'; loadLeaderboards(); });
         refreshProjects.addEventListener('click', () => loadProjects());
         projStatus.addEventListener('change', () => loadProjects());
         projContributor.addEventListener('change', () => { projCurrentPage = 1; loadProjects(); });
@@ -419,6 +428,47 @@
             const uniRes = await getUniversities();
             if (uniRes.success) {
                 (uniRes.data||[]).forEach(u => { const o=document.createElement('option'); o.value=u.id; o.textContent=u.name; projUniversity.appendChild(o); });
+            }
+        })();
+        const renderLeaderboardRows = (rows, cols) => rows.map(r => `<div class="list-item">${cols.map(c => `<div class="item-sub">${r[c] ?? ''}</div>`).join('')}</div>`).join('');
+
+        const loadLeaderboards = async () => {
+            const windowKey = lbWindow?.value || '7d';
+            const [tc, tp] = await Promise.all([getTopContributors(10, windowKey), getTopProjects(10, windowKey)]);
+            if (!tc.error) lbContrib.innerHTML = renderLeaderboardRows((tc.data||[]).map(x => ({ user_id: x.id, uploads: x.uploads, views: x.views, downloads: x.downloads })), ['user_id','uploads','views','downloads']);
+            if (!tp.error) lbProjects.innerHTML = renderLeaderboardRows((tp.data||[]).map(x => ({ title: x.title, views: x.views, downloads: x.download_count })), ['title','views','downloads']);
+        };
+
+        lbWindow?.addEventListener('change', () => loadLeaderboards());
+        lbExportCsv?.addEventListener('click', async () => {
+            const windowKey = lbWindow?.value || '7d';
+            const tc = await getTopContributors(50, windowKey);
+            if (tc.error) return; const data = tc.data||[];
+            const headers = ['user_id','uploads','views','downloads'];
+            const rows = [headers.join(',')].concat(data.map(p => headers.map(h => (''+(p[h]??'')).replace(/,/g,' ')).join(',')));
+            const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'top_contributors.csv'; a.click();
+        });
+        lbExportJson?.addEventListener('click', async () => {
+            const windowKey = lbWindow?.value || '7d';
+            const tc = await getTopContributors(50, windowKey);
+            if (tc.error) return; const data = tc.data||[];
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'top_contributors.json'; a.click();
+        });
+
+        // Auth-aware logout button
+        (async () => {
+            const u = await getCurrentUser();
+            if (u?.success) {
+                navLogout?.classList.remove('hidden');
+                navLogout?.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    await signOut();
+                    window.location.href = '/index.html';
+                });
+            } else {
+                navLogout?.classList.add('hidden');
             }
         })();
 

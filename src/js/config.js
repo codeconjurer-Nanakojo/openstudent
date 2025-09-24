@@ -21,6 +21,21 @@ export const chartConfig = {
   }
 }
 
+export const timeWindows = {
+  '7d': { label: 'Last 7 days', days: 7 },
+  '30d': { label: 'Last 30 days', days: 30 },
+  'semester': { label: 'Last 120 days', days: 120 }
+}
+
+export function getTimeWindowStart(windowKey = 'all') {
+  if (!windowKey || windowKey === 'all') return null
+  const conf = timeWindows[windowKey]
+  if (!conf) return null
+  const d = new Date()
+  d.setDate(d.getDate() - (conf.days || 0))
+  return d
+}
+
 console.log('⚙️ config loaded')
 
 // Standardized time windows for analytics and filtering

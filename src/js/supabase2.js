@@ -682,3 +682,79 @@ export async function getSignedUrl(bucket, path, expiresIn = 60) {
     return { data: null, error: null }
   }
 }
+
+// =====================================
+// UNIVERSITIES CRUD (Admin Catalog)
+// =====================================
+
+/**
+ * List universities
+ */
+export async function listUniversities() {
+  try {
+    const { data, error } = await supabase
+      .from('universities')
+      .select('id, name, short_name, is_active, created_at')
+      .order('name')
+    if (error) return { data: null, error }
+    return { data, error: null }
+  } catch (err) {
+    return { data: null, error: err }
+  }
+}
+
+/**
+ * Insert university
+ */
+export async function insertUniversity({ name, short_name, is_active = true }) {
+  try {
+    if (!name) return { data: null, error: new Error('Name required') }
+    const { data, error } = await supabase
+      .from('universities')
+      .insert([{ name, short_name: short_name || null, is_active }])
+      .select('id, name, short_name, is_active')
+      .single()
+    if (error) return { data: null, error }
+    return { data, error: null }
+  } catch (err) {
+    return { data: null, error: err }
+  }
+}
+
+/**
+ * Update university
+ */
+export async function updateUniversity(id, updates) {
+  try {
+    if (!id) return { data: null, error: new Error('ID required') }
+    const { data, error } = await supabase
+      .from('universities')
+      .update(updates)
+      .eq('id', id)
+      .select('id, name, short_name, is_active')
+      .single()
+    if (error) return { data: null, error }
+    return { data, error: null }
+  } catch (err) {
+    return { data: null, error: err }
+  }
+}
+
+/**
+ * Delete university
+ */
+export async function deleteUniversity(id) {
+  try {
+    if (!id) return { data: null, error: new Error('ID required') }
+    const { data, error } = await supabase
+      .from('universities')
+      .delete()
+      .eq('id', id)
+      .select('id')
+      .single()
+    if (error) return { data: null, error }
+    return { data, error: null }
+  } catch (err) {
+    return { data: null, error: err }
+  }
+}

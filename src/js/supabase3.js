@@ -531,6 +531,53 @@ export async function getCommunityStats() {
   }
 }
 
+// =========================
+// Leaderboards
+// =========================
+
+export async function getTopContributors(limit = 10, windowKey = '7d') {
+  try {
+    const start = getTimeWindowStart(windowKey)
+    let query = supabase
+      .from('projects')
+      .select('contributor_id, views, download_count, created_at')
+    if (start) query = query.gte('created_at', start.toISOString())
+    const { data, error } = await query
+    if (error) return { data: null, error }
+    const byUser = {}
+    for (const r of data || []) {
+      const u = r.contributor_id
+      if (!u) continue
+      if (!byUser[u]) byUser[u] = { uploads: 0, views: 0, downloads: 0 }
+      byUser[u].uploads += 1
+      byUser[u].views += r.views || 0
+      byUser[u].downloads += r.download_count || 0
+    }
+    const ranked = Object.entries(byUser).map(([id, v]) => ({ id, ...v }))
+      .sort((a,b)=> b.uploads - a.uploads || b.views - a.views || b.downloads - a.downloads)
+      .slice(0, limit)
+    return { data: ranked, error: null }
+  } catch (err) {
+    return { data: null, error: err }
+  }
+}
+
+export async function getTopProjects(limit = 10, windowKey = '7d') {
+  try {
+    const start = getTimeWindowStart(windowKey)
+    let query = supabase
+      .from('projects')
+      .select('id, title, views, download_count, created_at')
+    if (start) query = query.gte('created_at', start.toISOString())
+    const { data, error } = await query
+    if (error) return { data: null, error }
+    const ranked = (data||[]).sort((a,b)=> (b.views||0) - (a.views||0) || (b.download_count||0) - (a.download_count||0)).slice(0, limit)
+    return { data: ranked, error: null }
+  } catch (err) {
+    return { data: null, error: err }
+  }
+}
+
 export async function updateUserRole(userId, role) {
   try {
     if (!userId || !role) return { data: null, error: new Error('User ID and role required') }
