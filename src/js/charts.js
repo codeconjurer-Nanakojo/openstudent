@@ -59,3 +59,26 @@ export function renderLine(ctx, labels, data, label = 'Views') {
 
 console.log('📊 charts module ready')
 
+// ==============================
+// Trend indicator helpers
+// ==============================
+export function formatTrend(pctChange) {
+  if (pctChange === null || pctChange === undefined || isNaN(pctChange)) {
+    return { text: '—', icon: '', color: chartColors.gray, direction: 'flat' }
+  }
+  const pct = Number(pctChange)
+  const up = pct > 0
+  const down = pct < 0
+  const icon = up ? '↑' : (down ? '↓' : '→')
+  const color = up ? chartColors.success : (down ? chartColors.error : chartColors.gray)
+  const text = `${pct > 0 ? '+' : ''}${pct.toFixed(2)}%`
+  const direction = up ? 'up' : (down ? 'down' : 'flat')
+  return { text, icon, color, direction }
+}
+
+export function renderTrendBadge(containerEl, pctChange) {
+  if (!containerEl) return
+  const t = formatTrend(pctChange)
+  containerEl.innerHTML = `<span class="badge" style="background:${t.color}22; color:${t.color}; border:1px solid ${t.color}55;">${t.icon} ${t.text}</span>`
+}
+

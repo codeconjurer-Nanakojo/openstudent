@@ -156,7 +156,25 @@
 
                 <div id="catalog-panel" style="display:none; margin-top:1rem;">
                     <div class="list-header">
-                        <h2>Programs & Courses</h2>
+                        <h2>Universities, Programs & Courses</h2>
+                    </div>
+                    
+                    <!-- Universities Section -->
+                    <div class="container-card" style="padding:1rem; margin-bottom:1rem;">
+                        <div class="list-header" style="margin-bottom:.5rem;">
+                            <h3>Universities</h3>
+                            <div class="actions-inline">
+                                <input id="university-name" class="btn" type="text" placeholder="University name">
+                                <input id="university-short" class="btn" type="text" placeholder="Short name (e.g., MIT)">
+                                <button id="add-university" class="btn primary"><i class="fas fa-plus"></i> Add University</button>
+                            </div>
+                        </div>
+                        <div id="universities-list" class="list-grid"></div>
+                    </div>
+
+                    <!-- Programs & Courses Section -->
+                    <div class="list-header">
+                        <h3>Programs & Courses</h3>
                         <div class="actions-inline">
                             <input id="new-program-name" class="btn" type="text" placeholder="New program name">
                             <button id="add-program" class="btn primary"><i class="fas fa-plus"></i> Add Program</button>

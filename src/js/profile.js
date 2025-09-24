@@ -1,8 +1,9 @@
 // profile.js
 import { getProfile, updateProfile, logout, uploadProfilePictureToImageKit, getUniversities, getPrograms, insertProgram } from '/src/js/supabase.js';
 import { getCurrentUser, getAvatarUrl } from '/src/js/supabase.js';
+import { supabase } from '/src/js/supabase.js';
 import { getDocuments, deleteDocument } from '/src/js/supabase2.js';
-import { getContributorAnalytics, getContributorBadges, getContributorUploadsByCourse, getCourseNames, getContributorProgression, computeMostViewedAndDownloaded } from '/src/js/supabase3.js';
+import { getContributorAnalytics, getContributorBadges, getContributorUploadsByCourse, getCourseNames, getContributorProgression, computeMostViewedAndDownloaded, getTopContributors } from '/src/js/supabase3.js';
 import { timeWindows } from '/src/js/config.js';
 import { loadChartJs, renderLine, renderPie } from '/src/js/charts.js';
 
@@ -38,6 +39,7 @@ const progressionEl = document.getElementById('progression');
 const chartViewsEl = document.getElementById('chart-views');
 const chartCoursesEl = document.getElementById('chart-courses');
 const timeWindowSelect = document.getElementById('contrib-time-window');
+const topContribList = document.getElementById('top-contrib-list');
 
 // Uploads Elements
 const grid = document.getElementById('uploads-grid');
@@ -685,6 +687,55 @@ function setupEditProfileHandler() {
     }
 }
 
+// ==============================
+// Top Contributors This Week Widget
+// ==============================
+async function loadTopContributorsWidget() {
+    if (!topContribList) return;
+    try {
+        // Loading state
+        topContribList.innerHTML = '<div class="empty-state">Loading…</div>';
+
+        const { data, error } = await getTopContributors(5, '7d');
+        if (error) {
+            topContribList.innerHTML = '<div class="empty-state">Failed to load</div>';
+            return;
+        }
+        const rows = data || [];
+
+        // Resolve display names for users
+        const ids = rows.map(r => r.id).filter(Boolean);
+        const nameMap = {};
+        if (ids.length > 0) {
+            const { data: users, error: uErr } = await supabase
+                .from('users')
+                .select('id, full_name, email')
+                .in('id', ids);
+            if (!uErr && Array.isArray(users)) {
+                users.forEach(u => { nameMap[u.id] = u.full_name || u.email || u.id; });
+            }
+        }
+
+        // Render
+        if (rows.length === 0) {
+            topContribList.innerHTML = '<div class="empty-state">No data for this week yet.</div>';
+            return;
+        }
+
+        topContribList.innerHTML = rows.map((r, idx) => `
+            <div class="list-item">
+                <div>
+                    <div class="item-title">#${idx + 1} ${nameMap[r.id] || r.id}</div>
+                    <div class="item-sub">Uploads: ${r.uploads || 0} • Views: ${r.views || 0} • Downloads: ${r.downloads || 0}</div>
+                </div>
+            </div>
+        `).join('');
+    } catch (e) {
+        console.error('loadTopContributorsWidget error', e);
+        topContribList.innerHTML = '<div class="empty-state">Failed to load</div>';
+    }
+}
+
 // Initialize the page
 function initProfilePage() {
     // Set up event handlers
@@ -697,6 +748,9 @@ function initProfilePage() {
 
     // Load profile data
     loadProfile();
+
+    // Load sidebar leaderboard widget
+    loadTopContributorsWidget();
 
     // Time window change
     timeWindowSelect?.addEventListener('change', () => { loadAnalytics(); });

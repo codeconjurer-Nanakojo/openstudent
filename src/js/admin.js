@@ -1,6 +1,6 @@
 
         import { getPrograms, getProfile, signOut, getCurrentUser } from '/src/js/supabase.js';
-        import { getCourses, getDocuments, countDocuments, updateDocumentStatus, deleteDocument, listPrograms, createProgram, updateProgram, deleteProgram, insertCourse, updateCourse, deleteCourse } from '/src/js/supabase2.js';
+        import { getCourses, getDocuments, countDocuments, updateDocumentStatus, deleteDocument, listPrograms, createProgram, updateProgram, deleteProgram, insertCourse, updateCourse, deleteCourse, listUniversities, insertUniversity, updateUniversity, deleteUniversity } from '/src/js/supabase2.js';
         import { getAdminAnalytics, getAllUsers, updateUserRole, updateUserActive, getAllProjects, getProjectStatusCounts, getUploadsPerProgram, getUserByEmail, getModerationHistory, logModerationAction, getAllCoursesMinimal, countProjects, getTopContributors, getTopProjects } from '/src/js/supabase3.js';
         import { timeWindows } from '/src/js/config.js';
         import { getUniversities } from '/src/js/supabase.js';
@@ -543,7 +543,7 @@
         };
 
         const loadCatalog = async () => {
-            await loadProgramsList();
+            await Promise.all([loadProgramsList(), loadUniversitiesList()]);
             coursesList.innerHTML = '<div class="empty-state">Select a program to view courses</div>';
         };
 
@@ -562,4 +562,74 @@
             const semester = parseInt(courseSemesterInput?.value||'');
             const res = await insertCourse({ code, name, program_id: selectedProgramId, level, semester });
             if (res.error) showMessage(res.error.message||'Failed to add course'); else { showMessage('Course added','success'); courseCodeInput.value=''; courseNameInput.value=''; courseLevelInput.value=''; courseSemesterInput.value=''; await loadCoursesForProgram(selectedProgramId); }
+        });
+
+        // =========================
+        // Universities UI wiring
+        // =========================
+        const universitiesList = document.getElementById('universities-list');
+        const addUniversityBtn = document.getElementById('add-university');
+        const universityNameInput = document.getElementById('university-name');
+        const universityShortInput = document.getElementById('university-short');
+
+        const renderUniversities = (rows) => {
+            if (!universitiesList) return;
+            if (!rows || rows.length === 0) { universitiesList.innerHTML = '<div class="empty-state">No universities</div>'; return; }
+            universitiesList.innerHTML = rows.map(u => `
+                <div class="list-item">
+                    <div>
+                        <div class="item-title">${u.name} ${u.short_name ? `(<span class=\"muted\">${u.short_name}</span>)` : ''}</div>
+                        <div class="item-sub">${u.is_active ? 'Active' : 'Inactive'} • ${new Date(u.created_at).toLocaleDateString()}</div>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn" data-action="toggle" data-id="${u.id}" data-active="${u.is_active? '1':'0'}">${u.is_active ? 'Deactivate' : 'Activate'}</button>
+                        <button class="btn" data-action="edit" data-id="${u.id}" data-name="${u.name}" data-short="${u.short_name||''}">Edit</button>
+                        <button class="btn danger" data-action="delete" data-id="${u.id}">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+
+            universitiesList.querySelectorAll('button[data-action="toggle"]').forEach(b => b.addEventListener('click', async () => {
+                const id = b.getAttribute('data-id');
+                const active = b.getAttribute('data-active') === '1';
+                const res = await updateUniversity(id, { is_active: !active });
+                if (res.error) showMessage(res.error.message||'Failed'); else { showMessage('University updated','success'); await loadUniversitiesList(); }
+            }));
+
+            universitiesList.querySelectorAll('button[data-action="edit"]').forEach(b => b.addEventListener('click', async () => {
+                const id = b.getAttribute('data-id');
+                const currentName = b.getAttribute('data-name') || '';
+                const currentShort = b.getAttribute('data-short') || '';
+                const name = prompt('University name:', currentName);
+                if (name === null) return;
+                const short_name = prompt('Short name (optional):', currentShort);
+                const res = await updateUniversity(id, { name: name.trim(), short_name: (short_name||'').trim() || null });
+                if (res.error) showMessage(res.error.message||'Failed'); else { showMessage('University updated','success'); await loadUniversitiesList(); }
+            }));
+
+            universitiesList.querySelectorAll('button[data-action="delete"]').forEach(b => b.addEventListener('click', async () => {
+                const id = b.getAttribute('data-id');
+                if (!confirm('Delete this university?')) return;
+                const res = await deleteUniversity(id);
+                if (res.error) showMessage(res.error.message||'Failed'); else { showMessage('University deleted','success'); await loadUniversitiesList(); }
+            }));
+        };
+
+        const loadUniversitiesList = async () => {
+            const res = await listUniversities();
+            if (res.error) { showMessage(res.error.message||'Failed to load universities'); return; }
+            renderUniversities(res.data || []);
+        };
+
+        addUniversityBtn?.addEventListener('click', async () => {
+            const name = (universityNameInput?.value||'').trim();
+            const short_name = (universityShortInput?.value||'').trim();
+            if (!name) { showMessage('Enter university name'); return; }
+            const res = await insertUniversity({ name, short_name: short_name || null });
+            if (res.error) showMessage(res.error.message||'Failed to add university'); else {
+                showMessage('University added','success');
+                if (universityNameInput) universityNameInput.value = '';
+                if (universityShortInput) universityShortInput.value = '';
+                await loadUniversitiesList();
+            }
         });

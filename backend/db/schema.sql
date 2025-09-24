@@ -1,3 +1,95 @@
+
+-- =====================================
+-- SQL RPCs for Analytics and Leaderboards
+-- =====================================
+
+-- Returns top contributors in a date range ranked by uploads, then views, then downloads
+create or replace function public.get_top_contributors(p_limit integer, p_start timestamptz, p_end timestamptz)
+returns table (
+  user_id uuid,
+  uploads integer,
+  views bigint,
+  downloads bigint
+) language sql stable as $$
+  select
+    contributor_id as user_id,
+    count(*)::int as uploads,
+    coalesce(sum(views), 0)::bigint as views,
+    coalesce(sum(download_count), 0)::bigint as downloads
+  from public.projects
+  where (p_start is null or created_at >= p_start)
+    and (p_end   is null or created_at <  p_end)
+  group by contributor_id
+  order by uploads desc, views desc, downloads desc
+  limit coalesce(p_limit, 10);
+$$;
+
+-- Returns top projects in a date range ranked by views then downloads
+create or replace function public.get_top_projects(p_limit integer, p_start timestamptz, p_end timestamptz)
+returns table (
+  project_id uuid,
+  title text,
+  views bigint,
+  downloads bigint,
+  created_at timestamptz
+) language sql stable as $$
+  select id as project_id, title, coalesce(views,0)::bigint as views, coalesce(download_count,0)::bigint as downloads, created_at
+  from public.projects
+  where (p_start is null or created_at >= p_start)
+    and (p_end   is null or created_at <  p_end)
+  order by views desc, downloads desc
+  limit coalesce(p_limit, 10);
+$$;
+
+-- Generic metric trend for projects: supported metrics: 'uploads', 'views', 'downloads'
+-- Returns current_value, previous_value, pct_change (previous -> current)
+create or replace function public.get_metric_trend(p_metric text, p_start timestamptz, p_end timestamptz)
+returns table (
+  current_value numeric,
+  previous_value numeric,
+  pct_change numeric
+) language plpgsql stable as $$
+declare
+  v_days integer;
+  v_prev_start timestamptz;
+  v_prev_end timestamptz;
+  v_curr numeric := 0;
+  v_prev numeric := 0;
+begin
+  if p_start is null or p_end is null then
+    -- If no window provided, compute last 7 days against the prior 7 days
+    v_days := 7;
+    v_prev_end := date_trunc('day', now());
+    v_prev_start := v_prev_end - (v_days || ' days')::interval;
+    p_end := v_prev_end;
+    p_start := v_prev_start;
+  end if;
+
+  v_prev_start := p_start - (p_end - p_start);
+  v_prev_end := p_start;
+
+  if p_metric = 'uploads' then
+    select count(*)::numeric into v_curr from public.projects where created_at >= p_start and created_at < p_end;
+    select count(*)::numeric into v_prev from public.projects where created_at >= v_prev_start and created_at < v_prev_end;
+  elsif p_metric = 'views' then
+    select coalesce(sum(views),0)::numeric into v_curr from public.projects where created_at >= p_start and created_at < p_end;
+    select coalesce(sum(views),0)::numeric into v_prev from public.projects where created_at >= v_prev_start and created_at < v_prev_end;
+  elsif p_metric = 'downloads' then
+    select coalesce(sum(download_count),0)::numeric into v_curr from public.projects where created_at >= p_start and created_at < p_end;
+    select coalesce(sum(download_count),0)::numeric into v_prev from public.projects where created_at >= v_prev_start and created_at < v_prev_end;
+  else
+    raise exception 'Unsupported metric: %', p_metric;
+  end if;
+
+  return query select v_curr, v_prev, case when v_prev = 0 then null else round(((v_curr - v_prev) / v_prev) * 100.0, 2) end;
+end;
+$$;
+
+-- Grant execution to anon/authenticated as needed (adjust roles to your project)
+grant execute on function public.get_top_contributors(integer, timestamptz, timestamptz) to anon, authenticated;
+grant execute on function public.get_top_projects(integer, timestamptz, timestamptz) to anon, authenticated;
+grant execute on function public.get_metric_trend(text, timestamptz, timestamptz) to anon, authenticated;
+
 -- OpenStudent Database Schema
 -- Designed for Supabase (PostgreSQL) with RLS and proper indexing
 

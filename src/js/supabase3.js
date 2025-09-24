@@ -538,6 +538,19 @@ export async function getCommunityStats() {
 export async function getTopContributors(limit = 10, windowKey = '7d') {
   try {
     const start = getTimeWindowStart(windowKey)
+    const end = new Date()
+    // Prefer SQL RPC
+    const rpc = await supabase.rpc('get_top_contributors', {
+      p_limit: limit,
+      p_start: start ? start.toISOString() : null,
+      p_end: end.toISOString()
+    })
+    if (!rpc.error && Array.isArray(rpc.data)) {
+      const mapped = rpc.data.map(r => ({ id: r.user_id, uploads: r.uploads, views: r.views, downloads: r.downloads }))
+      return { data: mapped, error: null }
+    }
+
+    // Fallback to client-side aggregation
     let query = supabase
       .from('projects')
       .select('contributor_id, views, download_count, created_at')
@@ -565,6 +578,19 @@ export async function getTopContributors(limit = 10, windowKey = '7d') {
 export async function getTopProjects(limit = 10, windowKey = '7d') {
   try {
     const start = getTimeWindowStart(windowKey)
+    const end = new Date()
+    // Prefer SQL RPC
+    const rpc = await supabase.rpc('get_top_projects', {
+      p_limit: limit,
+      p_start: start ? start.toISOString() : null,
+      p_end: end.toISOString()
+    })
+    if (!rpc.error && Array.isArray(rpc.data)) {
+      const mapped = rpc.data.map(r => ({ id: r.project_id, title: r.title, views: r.views, download_count: r.downloads, created_at: r.created_at }))
+      return { data: mapped, error: null }
+    }
+
+    // Fallback
     let query = supabase
       .from('projects')
       .select('id, title, views, download_count, created_at')
@@ -573,6 +599,27 @@ export async function getTopProjects(limit = 10, windowKey = '7d') {
     if (error) return { data: null, error }
     const ranked = (data||[]).sort((a,b)=> (b.views||0) - (a.views||0) || (b.download_count||0) - (a.download_count||0)).slice(0, limit)
     return { data: ranked, error: null }
+  } catch (err) {
+    return { data: null, error: err }
+  }
+}
+
+// =========================
+// Trend helpers via RPC
+// =========================
+export async function getMetricTrend(metric = 'uploads', windowKey = '7d') {
+  try {
+    const start = getTimeWindowStart(windowKey)
+    const end = new Date()
+    const { data, error } = await supabase.rpc('get_metric_trend', {
+      p_metric: metric,
+      p_start: start ? start.toISOString() : null,
+      p_end: end.toISOString()
+    })
+    if (error) return { data: null, error }
+    const row = Array.isArray(data) && data.length ? data[0] : null
+    if (!row) return { data: { current_value: 0, previous_value: 0, pct_change: null }, error: null }
+    return { data: row, error: null }
   } catch (err) {
     return { data: null, error: err }
   }
