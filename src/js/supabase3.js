@@ -1,8 +1,18 @@
+// Resolve a windowKey to concrete start/end dates
+function resolveWindow(windowKey) {
+  if (windowKey === 'semester') {
+    const range = getSemesterRange(new Date())
+    return { start: range.start, end: range.end }
+  }
+  const start = getTimeWindowStart(windowKey)
+  const end = new Date()
+  return { start, end }
+}
 // src/js/supabase3.js - Advanced integrations (MEGA, QA utilities)
 // Uses authenticated context via supabase.js when needed
 
 import { supabase } from './supabase.js'
-import { badgesConfig as defaultBadgesConfig, getTimeWindowStart } from './config.js'
+import { badgesConfig as defaultBadgesConfig, getTimeWindowStart, getSemesterRange } from './config.js'
 
 const MEGA_UPLOAD_ENDPOINT = '/api/mega/upload'
 
@@ -24,8 +34,7 @@ function getPrevWindow(start, end) {
 
 export async function getRisingContributors(limit = 5, windowKey = '7d', metric = 'views') {
   try {
-    const start = getTimeWindowStart(windowKey)
-    const end = new Date()
+    const { start, end } = resolveWindow(windowKey)
     const { prevStart, prevEnd } = getPrevWindow(start, end)
     const curr = await supabase.rpc('get_top_contributors', { p_limit: 1000, p_start: start ? start.toISOString() : null, p_end: end.toISOString() })
     const prev = (start && prevStart) ? await supabase.rpc('get_top_contributors', { p_limit: 1000, p_start: prevStart.toISOString(), p_end: prevEnd.toISOString() }) : { data: [] }
@@ -47,8 +56,7 @@ export async function getRisingContributors(limit = 5, windowKey = '7d', metric 
 
 export async function getTrendingProjects(limit = 5, windowKey = '7d', metric = 'views') {
   try {
-    const start = getTimeWindowStart(windowKey)
-    const end = new Date()
+    const { start, end } = resolveWindow(windowKey)
     const { prevStart, prevEnd } = getPrevWindow(start, end)
     const curr = await supabase.rpc('get_top_projects', { p_limit: 1000, p_start: start ? start.toISOString() : null, p_end: end.toISOString() })
     const prev = (start && prevStart) ? await supabase.rpc('get_top_projects', { p_limit: 1000, p_start: prevStart.toISOString(), p_end: prevEnd.toISOString() }) : { data: [] }
@@ -208,12 +216,13 @@ export async function incrementDocumentViews(docId) {
 export async function getContributorAnalytics(userId, windowKey = 'all') {
   try {
     if (!userId) return { data: null, error: new Error('User ID required') }
-    const start = getTimeWindowStart(windowKey)
+    const { start, end } = resolveWindow(windowKey)
     let query = supabase
       .from('projects')
       .select('id, tags, course_id, views, created_at, status, download_count')
       .eq('contributor_id', userId)
     if (start) query = query.gte('created_at', start.toISOString())
+    if (end && windowKey === 'semester') query = query.lt('created_at', end.toISOString())
     const { data: docs, error } = await query
     if (error) return { data: null, error }
 
@@ -594,8 +603,7 @@ export async function getCommunityStats() {
 
 export async function getTopContributors(limit = 10, windowKey = '7d') {
   try {
-    const start = getTimeWindowStart(windowKey)
-    const end = new Date()
+    const { start, end } = resolveWindow(windowKey)
     // Prefer SQL RPC
     const rpc = await supabase.rpc('get_top_contributors', {
       p_limit: limit,
@@ -634,8 +642,7 @@ export async function getTopContributors(limit = 10, windowKey = '7d') {
 
 export async function getTopProjects(limit = 10, windowKey = '7d') {
   try {
-    const start = getTimeWindowStart(windowKey)
-    const end = new Date()
+    const { start, end } = resolveWindow(windowKey)
     // Prefer SQL RPC
     const rpc = await supabase.rpc('get_top_projects', {
       p_limit: limit,
@@ -666,8 +673,7 @@ export async function getTopProjects(limit = 10, windowKey = '7d') {
 // =========================
 export async function getMetricTrend(metric = 'uploads', windowKey = '7d') {
   try {
-    const start = getTimeWindowStart(windowKey)
-    const end = new Date()
+    const { start, end } = resolveWindow(windowKey)
     const { data, error } = await supabase.rpc('get_metric_trend', {
       p_metric: metric,
       p_start: start ? start.toISOString() : null,

@@ -2,7 +2,7 @@
         import { getPrograms, getProfile, signOut, getCurrentUser } from '/src/js/supabase.js';
         import { getCourses, getDocuments, countDocuments, updateDocumentStatus, deleteDocument, listPrograms, createProgram, updateProgram, deleteProgram, insertCourse, updateCourse, deleteCourse, listUniversities, insertUniversity, updateUniversity, deleteUniversity } from '/src/js/supabase2.js';
         import { getAdminAnalytics, getAllUsers, updateUserRole, updateUserActive, getAllProjects, getProjectStatusCounts, getUploadsPerProgram, getUserByEmail, getModerationHistory, logModerationAction, getAllCoursesMinimal, countProjects, getTopContributors, getTopProjects, getMetricTrend, getRisingContributors, getTrendingProjects } from '/src/js/supabase3.js';
-        import { timeWindows } from '/src/js/config.js';
+        import { timeWindows, getSemesterRange } from '/src/js/config.js';
         import { getUniversities } from '/src/js/supabase.js';
         import { loadChartJs, renderPie, renderBar, renderTrendBadge } from '/src/js/charts.js';
 
@@ -51,6 +51,15 @@
         const navLogout = document.getElementById('nav-logout');
         const lbPanel = document.getElementById('leaderboards-panel');
         const lbWindow = document.getElementById('lb-window');
+        const adminWindowLabel = document.getElementById('admin-window-label');
+        const lbWindowLabel = document.getElementById('lb-window-label');
+
+        const setWindowLabel = (el, key) => {
+            if (!el) return;
+            if (key === 'semester') { el.textContent = getSemesterRange().label; return; }
+            if (key === 'all') { el.textContent = 'All time'; return; }
+            el.textContent = timeWindows[key]?.label || '';
+        };
         const lbContrib = document.getElementById('lb-contributors');
         const lbProjects = document.getElementById('lb-projects');
         const lbExportCsv = document.getElementById('lb-export-csv');
@@ -247,6 +256,7 @@
         const renderAnalyticsCharts = async () => {
             await loadChartJs();
             const windowKey = timeWindowSelect?.value || 'all';
+            setWindowLabel(adminWindowLabel, windowKey);
             const [statusRes, perProgRes] = await Promise.all([getProjectStatusCounts(windowKey), getUploadsPerProgram(windowKey)]);
             if (!statusRes.error && chartStatusEl) {
                 const labels = ['Approved','Pending','Rejected'];
@@ -479,7 +489,12 @@
             }
         };
 
-        lbWindow?.addEventListener('change', () => loadLeaderboards());
+        lbWindow?.addEventListener('change', () => { setWindowLabel(lbWindowLabel, lbWindow.value); loadLeaderboards(); });
+        timeWindowSelect?.addEventListener('change', () => { setWindowLabel(adminWindowLabel, timeWindowSelect.value); });
+
+        // Initialize labels on load
+        setWindowLabel(adminWindowLabel, timeWindowSelect?.value || 'all');
+        setWindowLabel(lbWindowLabel, lbWindow?.value || '7d');
         lbExportCsv?.addEventListener('click', async () => {
             const windowKey = lbWindow?.value || '7d';
             const tc = await getTopContributors(50, windowKey);

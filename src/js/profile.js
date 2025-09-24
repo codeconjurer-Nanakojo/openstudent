@@ -4,7 +4,7 @@ import { getCurrentUser, getAvatarUrl } from '/src/js/supabase.js';
 import { supabase } from '/src/js/supabase.js';
 import { getDocuments, deleteDocument } from '/src/js/supabase2.js';
 import { getContributorAnalytics, getContributorBadges, getContributorUploadsByCourse, getCourseNames, getContributorProgression, computeMostViewedAndDownloaded, getTopContributors } from '/src/js/supabase3.js';
-import { timeWindows } from '/src/js/config.js';
+import { timeWindows, getSemesterRange } from '/src/js/config.js';
 import { loadChartJs, renderLine, renderPie, renderTrendBadge } from '/src/js/charts.js';
 import { getTimeWindowStart } from '/src/js/config.js';
 
@@ -40,6 +40,14 @@ const progressionEl = document.getElementById('progression');
 const chartViewsEl = document.getElementById('chart-views');
 const chartCoursesEl = document.getElementById('chart-courses');
 const timeWindowSelect = document.getElementById('contrib-time-window');
+const profileWindowLabel = document.getElementById('profile-window-label');
+
+const setWindowLabel = (el, key) => {
+    if (!el) return;
+    if (key === 'semester') { el.textContent = getSemesterRange().label; return; }
+    if (key === 'all') { el.textContent = 'All time'; return; }
+    el.textContent = timeWindows[key]?.label || '';
+};
 const topContribList = document.getElementById('top-contrib-list');
 
 // Uploads Elements
@@ -810,7 +818,9 @@ function initProfilePage() {
     loadTopContributorsWidget();
 
     // Time window change
-    timeWindowSelect?.addEventListener('change', () => { loadAnalytics(); loadPersonalTrends(); });
+    timeWindowSelect?.addEventListener('change', () => { setWindowLabel(profileWindowLabel, timeWindowSelect.value); loadAnalytics(); loadPersonalTrends(); });
+    // Initialize label on load
+    setWindowLabel(profileWindowLabel, timeWindowSelect?.value || 'all');
 }
 
 // Start when DOM is loaded

@@ -21,14 +21,16 @@ export const chartConfig = {
   }
 }
 
+// Single source of truth for time windows
 export const timeWindows = {
   '7d': { label: 'Last 7 days', days: 7 },
   '30d': { label: 'Last 30 days', days: 30 },
-  'semester': { label: 'Last 120 days', days: 120 }
+  '90d': { label: 'Last 90 days', days: 90 }
 }
 
-export function getTimeWindowStart(windowKey = 'all') {
-  if (!windowKey || windowKey === 'all') return null
+// Helper to compute the start date for a given window key
+export function getTimeWindowStart(windowKey) {
+  if (!windowKey) return null
   const conf = timeWindows[windowKey]
   if (!conf) return null
   const d = new Date()
@@ -38,26 +40,23 @@ export function getTimeWindowStart(windowKey = 'all') {
 
 console.log('⚙️ config loaded')
 
-// Standardized time windows for analytics and filtering
-export const timeWindows = {
-  all: 'all',
-  '7d': 7,
-  '30d': 30,
-  semester: 'semester'
-}
-
-export function getTimeWindowStart(windowKey) {
-  if (!windowKey || windowKey === 'all') return null
-  if (windowKey === 'semester') {
-    const now = new Date()
-    const month = now.getMonth() // 0-11
-    const startMonth = month < 6 ? 0 : 6 // Jan or Jul
-    return new Date(now.getFullYear(), startMonth, 1)
+// Academic semester ranges (Ghanaian calendar)
+// First Semester: Aug 1 – Dec 31 (current year)
+// Second Semester: Jan 1 – May 31 (current year)
+export function getSemesterRange(date = new Date()) {
+  const year = date.getFullYear()
+  const month = date.getMonth() + 1 // 1..12
+  if (month >= 8 && month <= 12) {
+    return {
+      label: `First Semester ${year}/${year + 1}`,
+      start: new Date(year, 7, 1), // Aug 1
+      end: new Date(year, 11, 31)  // Dec 31
+    }
+  } else {
+    return {
+      label: `Second Semester ${year}`,
+      start: new Date(year, 0, 1), // Jan 1
+      end: new Date(year, 4, 31)   // May 31
+    }
   }
-  const days = typeof timeWindows[windowKey] === 'number' ? timeWindows[windowKey] : null
-  if (!days) return null
-  const d = new Date()
-  d.setDate(d.getDate() - days)
-  return d
 }
-
