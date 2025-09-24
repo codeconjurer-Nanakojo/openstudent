@@ -10,6 +10,63 @@ const MEGA_UPLOAD_ENDPOINT = '/api/mega/upload'
  * Validate a MEGA link
  * @param {string} link
  * @returns {{ valid: boolean, message?: string }}
+
+// =========================
+// Community Signals
+// =========================
+function getPrevWindow(start, end) {
+  if (!start) return { prevStart: null, prevEnd: null }
+  const duration = end.getTime() - start.getTime()
+  const prevEnd = start
+  const prevStart = new Date(start.getTime() - duration)
+  return { prevStart, prevEnd }
+}
+
+export async function getRisingContributors(limit = 5, windowKey = '7d', metric = 'views') {
+  try {
+    const start = getTimeWindowStart(windowKey)
+    const end = new Date()
+    const { prevStart, prevEnd } = getPrevWindow(start, end)
+    const curr = await supabase.rpc('get_top_contributors', { p_limit: 1000, p_start: start ? start.toISOString() : null, p_end: end.toISOString() })
+    const prev = (start && prevStart) ? await supabase.rpc('get_top_contributors', { p_limit: 1000, p_start: prevStart.toISOString(), p_end: prevEnd.toISOString() }) : { data: [] }
+    const prevMap = {}
+    for (const r of prev.data || []) prevMap[r.user_id] = r
+    const scored = (curr.data || []).map(r => {
+      const prevRow = prevMap[r.user_id] || { uploads: 0, views: 0, downloads: 0 }
+      const currVal = metric === 'downloads' ? Number(r.downloads||0) : Number(r.views||0)
+      const prevVal = metric === 'downloads' ? Number(prevRow.downloads||0) : Number(prevRow.views||0)
+      const pct = prevVal === 0 ? (currVal > 0 ? 100 : 0) : ((currVal - prevVal) / prevVal) * 100
+      return { id: r.user_id, uploads: r.uploads, views: r.views, downloads: r.downloads, pct_change: Number(pct.toFixed(2)) }
+    })
+    const ranked = scored.sort((a,b)=> (b.pct_change||0) - (a.pct_change||0)).slice(0, limit)
+    return { data: ranked, error: null }
+  } catch (err) {
+    return { data: null, error: err }
+  }
+}
+
+export async function getTrendingProjects(limit = 5, windowKey = '7d', metric = 'views') {
+  try {
+    const start = getTimeWindowStart(windowKey)
+    const end = new Date()
+    const { prevStart, prevEnd } = getPrevWindow(start, end)
+    const curr = await supabase.rpc('get_top_projects', { p_limit: 1000, p_start: start ? start.toISOString() : null, p_end: end.toISOString() })
+    const prev = (start && prevStart) ? await supabase.rpc('get_top_projects', { p_limit: 1000, p_start: prevStart.toISOString(), p_end: prevEnd.toISOString() }) : { data: [] }
+    const prevMap = {}
+    for (const r of prev.data || []) prevMap[r.project_id] = r
+    const scored = (curr.data || []).map(r => {
+      const prevRow = prevMap[r.project_id] || { views: 0, downloads: 0 }
+      const currVal = metric === 'downloads' ? Number(r.downloads||0) : Number(r.views||0)
+      const prevVal = metric === 'downloads' ? Number(prevRow.downloads||0) : Number(prevRow.views||0)
+      const pct = prevVal === 0 ? (currVal > 0 ? 100 : 0) : ((currVal - prevVal) / prevVal) * 100
+      return { id: r.project_id, title: r.title, views: r.views, downloads: r.downloads, pct_change: Number(pct.toFixed(2)) }
+    })
+    const ranked = scored.sort((a,b)=> (b.pct_change||0) - (a.pct_change||0)).slice(0, limit)
+    return { data: ranked, error: null }
+  } catch (err) {
+    return { data: null, error: err }
+  }
+}
  */
 export function validateMegaLink(link) {
   if (!link || typeof link !== 'string') return { valid: false, message: 'Link is required' }

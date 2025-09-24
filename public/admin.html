@@ -40,13 +40,25 @@
                     </div>
                 </div>
 
-                <div id="message" class="message" style="display:none;"></div>
-
                 <div class="analytics-grid" id="admin-analytics" style="margin:1rem 0; display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:1rem;">
                     <div class="stat-card"><div class="stat-value" id="u-total">0</div><div class="stat-label">Total Users</div></div>
                     <div class="stat-card"><div class="stat-value" id="u-active">0</div><div class="stat-label">Active Users</div></div>
                     <div class="stat-card"><div class="stat-value" id="u-suspended">0</div><div class="stat-label">Suspended Users</div></div>
-                    <div class="stat-card"><div class="stat-value" id="d-total">0</div><div class="stat-label">Total Documents</div></div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="d-total">0</div>
+                        <div class="stat-label">Total Documents <span id="d-total-trend" style="margin-left:.25rem;"></span></div>
+                        <div class="stat-trend-badge" id="d-total-trend-badge"></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="d-views">0</div>
+                        <div class="stat-label">Total Views <span id="d-views-trend" style="margin-left:.25rem;"></span></div>
+                        <div class="stat-trend-badge" id="d-views-trend-badge"></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="d-downloads">0</div>
+                        <div class="stat-label">Total Downloads <span id="d-downloads-trend" style="margin-left:.25rem;"></span></div>
+                        <div class="stat-trend-badge" id="d-downloads-trend-badge"></div>
+                    </div>
                     <div class="stat-card"><div class="stat-value" id="d-approved">0</div><div class="stat-label">Approved</div></div>
                     <div class="stat-card"><div class="stat-value" id="d-pending">0</div><div class="stat-label">Pending</div></div>
                     <div class="stat-card"><div class="stat-value" id="d-rejected">0</div><div class="stat-label">Rejected</div></div>
@@ -214,6 +226,8 @@
                             </select>
                             <button id="lb-export-csv" class="btn"><i class="fas fa-file-csv"></i> CSV</button>
                             <button id="lb-export-json" class="btn"><i class="fas fa-file-code"></i> JSON</button>
+                            <button id="lb-export-trends-csv" class="btn"><i class="fas fa-arrow-trend-up"></i> Trends CSV</button>
+                            <button id="lb-export-signals-json" class="btn"><i class="fas fa-bolt"></i> Signals JSON</button>
                         </div>
                     </div>
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
@@ -224,6 +238,16 @@
                         <div class="container-card" style="padding:1rem;">
                             <h3>Top Projects</h3>
                             <div id="lb-projects" class="list-grid"></div>
+                        </div>
+                    </div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem; margin-top:1rem;">
+                        <div class="container-card" style="padding:1rem;">
+                            <h3>Rising Contributors</h3>
+                            <div id="lb-rising-contributors" class="list-grid"></div>
+                        </div>
+                        <div class="container-card" style="padding:1rem;">
+                            <h3>Trending Projects</h3>
+                            <div id="lb-trending-projects" class="list-grid"></div>
                         </div>
                     </div>
                 </div>

@@ -1,10 +1,10 @@
 
         import { getPrograms, getProfile, signOut, getCurrentUser } from '/src/js/supabase.js';
         import { getCourses, getDocuments, countDocuments, updateDocumentStatus, deleteDocument, listPrograms, createProgram, updateProgram, deleteProgram, insertCourse, updateCourse, deleteCourse, listUniversities, insertUniversity, updateUniversity, deleteUniversity } from '/src/js/supabase2.js';
-        import { getAdminAnalytics, getAllUsers, updateUserRole, updateUserActive, getAllProjects, getProjectStatusCounts, getUploadsPerProgram, getUserByEmail, getModerationHistory, logModerationAction, getAllCoursesMinimal, countProjects, getTopContributors, getTopProjects } from '/src/js/supabase3.js';
+        import { getAdminAnalytics, getAllUsers, updateUserRole, updateUserActive, getAllProjects, getProjectStatusCounts, getUploadsPerProgram, getUserByEmail, getModerationHistory, logModerationAction, getAllCoursesMinimal, countProjects, getTopContributors, getTopProjects, getMetricTrend, getRisingContributors, getTrendingProjects } from '/src/js/supabase3.js';
         import { timeWindows } from '/src/js/config.js';
         import { getUniversities } from '/src/js/supabase.js';
-        import { loadChartJs, renderPie, renderBar } from '/src/js/charts.js';
+        import { loadChartJs, renderPie, renderBar, renderTrendBadge } from '/src/js/charts.js';
 
         const programSelect = document.getElementById('program-select');
         const courseSelect = document.getElementById('course-select');
@@ -55,6 +55,10 @@
         const lbProjects = document.getElementById('lb-projects');
         const lbExportCsv = document.getElementById('lb-export-csv');
         const lbExportJson = document.getElementById('lb-export-json');
+        const lbExportTrendsCsv = document.getElementById('lb-export-trends-csv');
+        const lbExportSignalsJson = document.getElementById('lb-export-signals-json');
+        const lbRisingContrib = document.getElementById('lb-rising-contributors');
+        const lbTrendingProjects = document.getElementById('lb-trending-projects');
 
         const PAGE_SIZE = 12;
         let currentPage = 1;
@@ -256,6 +260,30 @@
                 if (chartPrograms) chartPrograms.destroy();
                 chartPrograms = renderBar(chartProgramsEl.getContext('2d'), labels, values, 'Uploads');
             }
+
+            // Trend badges for uploads/views/downloads
+            try {
+                const [tUploads, tViews, tDownloads] = await Promise.all([
+                    getMetricTrend('uploads', windowKey),
+                    getMetricTrend('views', windowKey),
+                    getMetricTrend('downloads', windowKey)
+                ]);
+                const elUploadsVal = document.getElementById('d-total');
+                const elUploadsTrend = document.getElementById('d-total-trend-badge');
+                const elViewsVal = document.getElementById('d-views');
+                const elViewsTrend = document.getElementById('d-views-trend-badge');
+                const elDownVal = document.getElementById('d-downloads');
+                const elDownTrend = document.getElementById('d-downloads-trend-badge');
+                if (!tUploads.error && tUploads.data && elUploadsTrend) renderTrendBadge(elUploadsTrend, tUploads.data.pct_change);
+                if (!tViews.error && tViews.data) {
+                    if (elViewsVal) elViewsVal.textContent = String(Math.round(Number(tViews.data.current_value||0)));
+                    if (elViewsTrend) renderTrendBadge(elViewsTrend, tViews.data.pct_change);
+                }
+                if (!tDownloads.error && tDownloads.data) {
+                    if (elDownVal) elDownVal.textContent = String(Math.round(Number(tDownloads.data.current_value||0)));
+                    if (elDownTrend) renderTrendBadge(elDownTrend, tDownloads.data.pct_change);
+                }
+            } catch (e) { /* ignore */ }
         };
 
         const renderUsers = (rows) => {
@@ -437,6 +465,18 @@
             const [tc, tp] = await Promise.all([getTopContributors(10, windowKey), getTopProjects(10, windowKey)]);
             if (!tc.error) lbContrib.innerHTML = renderLeaderboardRows((tc.data||[]).map(x => ({ user_id: x.id, uploads: x.uploads, views: x.views, downloads: x.downloads })), ['user_id','uploads','views','downloads']);
             if (!tp.error) lbProjects.innerHTML = renderLeaderboardRows((tp.data||[]).map(x => ({ title: x.title, views: x.views, downloads: x.download_count })), ['title','views','downloads']);
+
+            // Community signals
+            const [rc, tr] = await Promise.all([
+                getRisingContributors(10, windowKey, 'views'),
+                getTrendingProjects(10, windowKey, 'views')
+            ]);
+            if (lbRisingContrib) {
+                lbRisingContrib.innerHTML = rc.error ? '<div class="empty-state">Failed to load</div>' : renderLeaderboardRows((rc.data||[]).map(x => ({ user_id: x.id, pct: x.pct_change + '%', views: x.views })), ['user_id','pct','views']);
+            }
+            if (lbTrendingProjects) {
+                lbTrendingProjects.innerHTML = tr.error ? '<div class="empty-state">Failed to load</div>' : renderLeaderboardRows((tr.data||[]).map(x => ({ title: x.title, pct: x.pct_change + '%', views: x.views })), ['title','pct','views']);
+            }
         };
 
         lbWindow?.addEventListener('change', () => loadLeaderboards());
@@ -455,6 +495,34 @@
             if (tc.error) return; const data = tc.data||[];
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
             const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'top_contributors.json'; a.click();
+        });
+
+        // Exports for trends/signals
+        lbExportTrendsCsv?.addEventListener('click', async () => {
+            const windowKey = lbWindow?.value || '7d';
+            const [tU, tV, tD] = await Promise.all([
+                getMetricTrend('uploads', windowKey),
+                getMetricTrend('views', windowKey),
+                getMetricTrend('downloads', windowKey)
+            ]);
+            const rows = [
+                ['metric','current_value','previous_value','pct_change'].join(','),
+                ['uploads', tU.data?.current_value||0, tU.data?.previous_value||0, tU.data?.pct_change??''].join(','),
+                ['views', tV.data?.current_value||0, tV.data?.previous_value||0, tV.data?.pct_change??''].join(','),
+                ['downloads', tD.data?.current_value||0, tD.data?.previous_value||0, tD.data?.pct_change??''].join(',')
+            ];
+            const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'trends.csv'; a.click();
+        });
+        lbExportSignalsJson?.addEventListener('click', async () => {
+            const windowKey = lbWindow?.value || '7d';
+            const [rc, tr] = await Promise.all([
+                getRisingContributors(20, windowKey, 'views'),
+                getTrendingProjects(20, windowKey, 'views')
+            ]);
+            const data = { risingContributors: rc.data||[], trendingProjects: tr.data||[] };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'community_signals.json'; a.click();
         });
 
         // Auth-aware logout button

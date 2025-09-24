@@ -5,7 +5,8 @@ import { supabase } from '/src/js/supabase.js';
 import { getDocuments, deleteDocument } from '/src/js/supabase2.js';
 import { getContributorAnalytics, getContributorBadges, getContributorUploadsByCourse, getCourseNames, getContributorProgression, computeMostViewedAndDownloaded, getTopContributors } from '/src/js/supabase3.js';
 import { timeWindows } from '/src/js/config.js';
-import { loadChartJs, renderLine, renderPie } from '/src/js/charts.js';
+import { loadChartJs, renderLine, renderPie, renderTrendBadge } from '/src/js/charts.js';
+import { getTimeWindowStart } from '/src/js/config.js';
 
 // DOM Elements for Advanced Profile Page
 const profileForm = document.getElementById('profile-form');
@@ -80,6 +81,61 @@ const showMessage = (text, type = 'error') => {
         setTimeout(() => { messageEl.style.display = 'none'; }, 5000);
     }
 };
+
+// ==============================
+// Personal Trend Badges
+// ==============================
+async function loadPersonalTrends() {
+    try {
+        if (!currentUser) return;
+        const windowKey = timeWindowSelect?.value || 'all';
+        const start = getTimeWindowStart(windowKey);
+        const end = new Date();
+        if (!start) { // no trend for 'all'
+            renderTrendBadge(document.getElementById('stat-total-trend'), null);
+            renderTrendBadge(document.getElementById('stat-views-trend'), null);
+            renderTrendBadge(document.getElementById('stat-downloads-trend'), null);
+            return;
+        }
+        const duration = end.getTime() - start.getTime();
+        const prevEnd = start;
+        const prevStart = new Date(start.getTime() - duration);
+
+        // Fetch current period docs for user
+        const { data: currDocs, error: currErr } = await supabase
+            .from('projects')
+            .select('id, views, download_count, created_at')
+            .eq('contributor_id', currentUser.id)
+            .gte('created_at', start.toISOString())
+            .lt('created_at', end.toISOString());
+        if (currErr) throw currErr;
+
+        // Fetch previous period docs for user
+        const { data: prevDocs, error: prevErr } = await supabase
+            .from('projects')
+            .select('id, views, download_count, created_at')
+            .eq('contributor_id', currentUser.id)
+            .gte('created_at', prevStart.toISOString())
+            .lt('created_at', prevEnd.toISOString());
+        if (prevErr) throw prevErr;
+
+        const sum = (arr, key) => (arr||[]).reduce((a,b)=> a + (Number(b[key]||0)), 0);
+        const currUploads = (currDocs||[]).length;
+        const prevUploads = (prevDocs||[]).length;
+        const currViews = sum(currDocs, 'views');
+        const prevViews = sum(prevDocs, 'views');
+        const currDownloads = sum(currDocs, 'download_count');
+        const prevDownloads = sum(prevDocs, 'download_count');
+
+        const pct = (curr, prev) => (prev === 0 ? (curr > 0 ? 100 : 0) : ((curr - prev) / prev) * 100);
+
+        renderTrendBadge(document.getElementById('stat-total-trend'), Number(pct(currUploads, prevUploads).toFixed(2)));
+        renderTrendBadge(document.getElementById('stat-views-trend'), Number(pct(currViews, prevViews).toFixed(2)));
+        renderTrendBadge(document.getElementById('stat-downloads-trend'), Number(pct(currDownloads, prevDownloads).toFixed(2)));
+    } catch (e) {
+        // Fail silently for trends
+    }
+}
 
 const formatDate = (iso) => {
     try { return new Date(iso).toLocaleDateString(); } catch { return ''; }
@@ -636,6 +692,7 @@ async function loadProfile() {
 
             // Load analytics and uploads
             await loadAnalytics();
+            await loadPersonalTrends();
             await loadUploads();
 
             // Check if we need to show the reminder banner
@@ -753,7 +810,7 @@ function initProfilePage() {
     loadTopContributorsWidget();
 
     // Time window change
-    timeWindowSelect?.addEventListener('change', () => { loadAnalytics(); });
+    timeWindowSelect?.addEventListener('change', () => { loadAnalytics(); loadPersonalTrends(); });
 }
 
 // Start when DOM is loaded

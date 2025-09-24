@@ -22,6 +22,55 @@ returns table (
   group by contributor_id
   order by uploads desc, views desc, downloads desc
   limit coalesce(p_limit, 10);
+
+-- =====================================
+-- RLS Policies: Universities
+-- =====================================
+alter table public.universities enable row level security;
+
+-- Helper: check if current user is admin
+create or replace function public.is_admin()
+returns boolean
+language sql
+stable
+as $$
+  select exists (
+    select 1 from public.users u
+    where u.id = auth.uid() and u.role = 'admin'
+  );
+$$;
+
+-- Read policy: anyone can read active universities
+create policy if not exists universities_read_all
+  on public.universities
+  for select
+  using (true);
+
+-- Insert policy: only admins
+create policy if not exists universities_insert_admin
+  on public.universities
+  for insert
+  with check (public.is_admin());
+
+-- Update policy: only admins
+create policy if not exists universities_update_admin
+  on public.universities
+  for update
+  using (public.is_admin())
+  with check (public.is_admin());
+
+-- Delete policy: only admins
+create policy if not exists universities_delete_admin
+  on public.universities
+  for delete
+  using (public.is_admin());
+
+-- =====================================
+-- Performance Indexes
+-- =====================================
+create index if not exists idx_projects_created_at on public.projects (created_at);
+create index if not exists idx_projects_views on public.projects (views);
+create index if not exists idx_projects_download_count on public.projects (download_count);
 $$;
 
 -- Returns top projects in a date range ranked by views then downloads
@@ -82,18 +131,12 @@ begin
   end if;
 
   return query select v_curr, v_prev, case when v_prev = 0 then null else round(((v_curr - v_prev) / v_prev) * 100.0, 2) end;
-end;
-$$;
-
--- Grant execution to anon/authenticated as needed (adjust roles to your project)
-grant execute on function public.get_top_contributors(integer, timestamptz, timestamptz) to anon, authenticated;
-grant execute on function public.get_top_projects(integer, timestamptz, timestamptz) to anon, authenticated;
-grant execute on function public.get_metric_trend(text, timestamptz, timestamptz) to anon, authenticated;
 
 -- OpenStudent Database Schema
 -- Designed for Supabase (PostgreSQL) with RLS and proper indexing
 
 -- Enable UUID extension
+{{ ... }}
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Universities table
