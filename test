@@ -1,0 +1,58 @@
+🔍 Testing & Debugging Checklist
+1. Authentication & Session Hygiene
+Verify logout works on every page (Index, Profile, Admin, Upload).
+
+Try accessing protected pages while logged out → should redirect to Index.
+
+Confirm session state clears properly (no cached profile/admin data).
+
+2. Admin Catalog
+CRUD for Programs, Courses, Universities:
+
+Add, edit, delete, toggle active/inactive.
+
+Verify RLS: non‑admins can only read.
+
+Check UI refresh after each action.
+
+3. Leaderboards & Signals
+Admin Leaderboards tab:
+
+Top Contributors/Projects update with time‑window changes.
+
+Rising Contributors/Trending Projects show correct % change.
+
+CSV/JSON exports download valid data.
+
+4. Contributor Dashboard
+Profile page:
+
+Uploads list accurate.
+
+Badges progression updates.
+
+Trend badges show correct % change.
+
+“Top Contributors This Week” widget loads.
+
+5. Analytics & Trends
+Admin analytics cards:
+
+Totals (uploads/views/downloads) match DB counts.
+
+Trend badges update when switching time windows.
+
+Profile analytics:
+
+Personal trends computed correctly.
+
+6. Database & Security
+Test RLS policies:
+
+Contributor role → can read universities, cannot insert/update/delete.
+
+Admin role → full CRUD.
+
+Verify indexes exist (projects.created_at, views, download_count).
+
+Run RPCs directly in SQL editor to confirm correct results.
