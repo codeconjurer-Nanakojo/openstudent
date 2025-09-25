@@ -1,153 +1,97 @@
-openstudent/
-├── public/                    # Static HTML pages served directly
-│   ├── login.html
-│   ├── register.html
-│   ├── add_project.html
-│   ├── admin.html
-│   ├── projects.html
-│   ├── project.html
-│   ├── profile.html
-│   ├── edit_blog.html
-│   ├── analytics.html
-│   ├── categories.html
-│   └── blog/
-│       ├── index.html
-│       └── post.html
-│
-├── src/                       # Vite-managed source code
-│   ├── assets/
-│   │   ├── css/
-│   │   │   └── style.css
-│   │   ├── images/
-│   │   └── fonts/
-│   ├── js/
-│   │   ├── supabase.js
-│   │   ├── imagekit.js
-│   │   ├── admin.js
-│   │   ├── dashboard.js
-│   │   └── utils.js
-│   └── main.js                # Entry point for frontend logic
-│
-├── backend/                   # Server-side logic and integrations
-│   ├── mega/
-│   │   └── upload.js
-│   ├── paystack/
-│   │   ├── webhook.js
-│   │   └── payout.js
-│   ├── functions/
-│   │   └── imagekit-auth.js
-│   └── db/
-│       └── schema.sql
-│
-├── docs/                      # Documentation
-│   ├── README.md
-│   ├── CONTRIBUTING.md
-│   ├── ROADMAP.md
-│   └── LICENSE.md
-│
-├── .env                       # Environment variables (VITE_ prefix)
-├── .gitignore                 # Ignore sensitive and build files
-├── supabase.config.json       # Optional Supabase config
-├── vite.config.js             # Vite config
-├── package.json               # Project metadata
-└── package-lock.json          # Dependency lock file
-
-
-# 📌 OpenStudent Development Phases
-
-## **Phase 1 — MVP Foundation (✅ Done)**
-**Goal:** Get a secure, working skeleton of the platform.
-**Scope:**
-- Authentication (email/password, OAuth, logout).
-- User profile (fetch, update, completion check).
-- Universities + programs seeded and selectable.
-- Profile picture optional with fallback avatar.
-- Contributor onboarding basics (role = contributor).
-- RLS enforced for `users`, `universities`, `programs`.
-
-**Deferred:**
-- “Other program” flow (RLS insert).
-- Global vs per‑university programs decision.
-- Error handling polish.
-- Contributor onboarding banner refinement.
-
----
-
-## **Phase 2 — Document Management & Contributor Workflows (🚀 Current)**
-**Goal:** Enable contributors to upload, manage, and share academic documents.
-**Scope:**
-- New `supabase2.js` for courses + documents logic.
-- `courses` + `documents` tables (already in your DB).
-- `upload.html` → contributor upload form.
-- `documents.html` → public listing with filters.
-- Extend `profile.html` → “My Uploads” section.
-- File upload integration (`imagekit.js` or Supabase storage).
-- RLS: contributors manage only their own uploads.
-- Contribution tracking (counts per user).
-
-**Deferred:**
-- Incentive/reward system.
-- Document moderation/approval workflow.
-- Advanced search (keywords, tags).
-
----
-
-## **Phase 3 — Community & Collaboration**
-**Goal:** Build a contributor‑driven academic community.
-**Scope:**
-- Ratings/reviews for documents.
-- Comment threads on documents.
-- Contributor badges/levels.
-- Notifications (new uploads in your program/course).
-- Basic analytics for contributors (views/downloads).
-
----
-
-## **Phase 4 — Incentives & Monetization**
-**Goal:** Create sustainable contributor motivation and platform revenue.
-**Scope:**
-- Contributor credits/rewards system.
-- Paystack integration for payouts.
-- Optional premium features (early access, bulk downloads).
-- Admin dashboard for managing payouts + disputes.
-
----
-
-## **Phase 5 — Advanced Features & Scaling**
-**Goal:** Make OpenStudent robust, scalable, and intelligent.
-**Scope:**
-- Full‑text search across documents.
-- AI‑powered document tagging & recommendations.
-- Analytics dashboard (usage trends, top contributors).
-- Admin moderation tools (flagging, takedowns).
-- Multi‑university scaling (beyond Ghana).
-
----
-
-## **Phase 6 — Long‑Term Vision**
-**Goal:** Position OpenStudent as a nationwide (and later continental) academic archive.
-**Scope:**
-- Multi‑language support.
-- Mobile app (React Native or Flutter).
-- Offline access / sync.
-- Partnerships with universities.
-- Legal + compliance frameworks.
-- World‑class security & scalability.
-
----
-
-# 🟡 Running Backlog (Skipped/Deferred Items)
-- Phase 1: “Other program” flow, global vs per‑university programs, error handling polish, contributor onboarding checks.
-- Phase 2: Incentives, moderation, advanced search.
-- Later: Analytics, AI features, mobile app, partnerships.
-
----
-
-✅ With this roadmap, you can see the **entire arc**:
-- **Phase 1** gave you the skeleton.
-- **Phase 2** gives you the heart (documents).
-- **Phase 3+** add the community, incentives, and scale.
-
----
-
-👉 Do you want me to **expand Phase 2 into a step‑by‑step execution plan** (which files to touch first, in what order, and what to test at each step), so you can start coding without overwhelm?
+.
+index.html
+.DS_Store
+test
+backend
+backend/paystack
+backend/paystack/payout.js
+backend/paystack/webhook.js
+backend/mega
+backend/mega/upload.js
+backend/db
+backend/db/schema.sql
+backend/functions
+backend/functions/imagekit-auth.js
+docs
+docs/LICENSE.md
+docs/README.md
+docs/ROADMAP.md
+docs/CONTRIBUTING.md
+supabase
+supabase/migrations
+supabase/migrations/20250925134454_baseline_schema_part4_policies_rls_grants.sql
+supabase/migrations/20250925134452_baseline_schema_part2_tables.sql
+supabase/migrations/20250925134453_baseline_schema_part3_constraints_indexes.sql
+supabase/migrations/20250925134451_baseline_schema_part1.sql
+supabase/migrations/20250925110609_baseline_schema.sql
+supabase/migrations/20250925110034_remote_schema.sql
+supabase/seed.sql
+supabase/.branches
+supabase/.branches/_current_branch
+supabase/.temp
+supabase/.temp/postgres-version
+supabase/.temp/project-ref
+supabase/.temp/rest-version
+supabase/.temp/storage-version
+supabase/.temp/gotrue-version
+supabase/.temp/pooler-url
+supabase/.temp/cli-latest
+public
+public/profile.html
+public/edit_blog.html
+public/admin.html
+public/auth
+public/auth/callback.html
+public/programs.html
+public/documents.html
+public/register.html
+public/courses.html
+public/login.html
+public/add_project.html
+public/vite.svg
+public/blog
+public/blog/post.html
+public/blog/index.html
+public/analytics.html
+public/project.html
+public/upload.html
+public/categories.html
+.gitignore
+package-lock.json
+package.json
+.env
+structure.txt
+.env.server
+supabase.config.json
+.idea
+.idea/openstudent.iml
+.idea/inspectionProfiles
+.idea/inspectionProfiles/profiles_settings.xml
+.idea/vcs.xml
+.idea/.gitignore
+.idea/workspace.xml
+.idea/modules.xml
+.idea/misc.xml
+src
+src/javascript.svg
+src/js
+src/js/supabase2.js
+src/js/profile.js
+src/js/supabase3.js
+src/js/imagekit.js
+src/js/index.js
+src/js/charts.js
+src/js/supabase.js
+src/js/config.js
+src/js/admin.js
+src/js/utils.js
+src/js/dashboard.js
+src/main.js
+src/style.css
+src/counter.js
+src/assets
+src/assets/css
+src/assets/css/admin.css
+src/assets/css/profile.css
+src/assets/images
+src/assets/fonts

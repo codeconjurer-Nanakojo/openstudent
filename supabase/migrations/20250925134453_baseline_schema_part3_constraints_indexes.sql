@@ -1,0 +1,122 @@
+-- Baseline schema (part 3): constraints, indexes, triggers, and foreign keys
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+-- Primary keys
+ALTER TABLE ONLY public.blog_comments ADD CONSTRAINT blog_comments_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.blog_posts ADD CONSTRAINT blog_posts_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.courses ADD CONSTRAINT courses_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.downloads ADD CONSTRAINT downloads_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.notifications ADD CONSTRAINT notifications_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.programs ADD CONSTRAINT programs_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.project_reviews ADD CONSTRAINT project_reviews_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.project_versions ADD CONSTRAINT project_versions_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.projects ADD CONSTRAINT projects_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.team_members ADD CONSTRAINT team_members_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.teams ADD CONSTRAINT teams_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.transactions ADD CONSTRAINT transactions_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.universities ADD CONSTRAINT universities_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.users ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.withdrawals ADD CONSTRAINT withdrawals_pkey PRIMARY KEY (id);
+
+-- Uniques
+ALTER TABLE ONLY public.courses ADD CONSTRAINT courses_program_code_unique UNIQUE (program_id, code);
+ALTER TABLE ONLY public.downloads ADD CONSTRAINT downloads_unique UNIQUE (project_id, downloaded_by);
+ALTER TABLE ONLY public.programs ADD CONSTRAINT programs_university_code_unique UNIQUE (university_id, code);
+ALTER TABLE ONLY public.project_reviews ADD CONSTRAINT project_reviews_unique UNIQUE (project_id, reviewer_id);
+ALTER TABLE ONLY public.project_versions ADD CONSTRAINT project_versions_unique UNIQUE (project_id, version);
+ALTER TABLE ONLY public.universities ADD CONSTRAINT universities_name_unique UNIQUE (name);
+ALTER TABLE ONLY public.users ADD CONSTRAINT users_email_unique UNIQUE (email);
+
+-- Indexes
+CREATE INDEX idx_blog_comments_blog_post ON public.blog_comments USING btree (blog_post_id);
+CREATE INDEX idx_blog_comments_parent ON public.blog_comments USING btree (parent_comment_id);
+CREATE INDEX idx_blog_comments_user ON public.blog_comments USING btree (user_id);
+CREATE INDEX idx_blog_posts_author ON public.blog_posts USING btree (author_id);
+CREATE INDEX idx_blog_posts_published_at ON public.blog_posts USING btree (published_at);
+CREATE INDEX idx_blog_posts_status ON public.blog_posts USING btree (status);
+CREATE INDEX idx_blog_posts_tags ON public.blog_posts USING gin (tags);
+CREATE INDEX idx_courses_program ON public.courses USING btree (program_id);
+CREATE INDEX idx_downloads_date ON public.downloads USING btree (downloaded_at);
+CREATE INDEX idx_downloads_project ON public.downloads USING btree (project_id);
+CREATE INDEX idx_downloads_user ON public.downloads USING btree (downloaded_by);
+CREATE INDEX idx_notifications_created_at ON public.notifications USING btree (created_at);
+CREATE INDEX idx_notifications_read ON public.notifications USING btree (is_read);
+CREATE INDEX idx_notifications_user ON public.notifications USING btree (user_id);
+CREATE INDEX idx_programs_university ON public.programs USING btree (university_id);
+CREATE INDEX idx_project_reviews_project ON public.project_reviews USING btree (project_id);
+CREATE INDEX idx_project_reviews_reviewer ON public.project_reviews USING btree (reviewer_id);
+CREATE INDEX idx_projects_contributor ON public.projects USING btree (contributor_id);
+CREATE INDEX idx_projects_course ON public.projects USING btree (course_id);
+CREATE INDEX idx_projects_created_at ON public.projects USING btree (created_at);
+CREATE INDEX idx_projects_download_count ON public.projects USING btree (download_count);
+CREATE INDEX idx_projects_featured ON public.projects USING btree (is_featured);
+CREATE INDEX idx_projects_public ON public.projects USING btree (is_public);
+CREATE INDEX idx_projects_status ON public.projects USING btree (status);
+CREATE INDEX idx_projects_tags ON public.projects USING gin (tags);
+CREATE INDEX idx_projects_team ON public.projects USING btree (team_id);
+CREATE INDEX idx_projects_views ON public.projects USING btree (views);
+CREATE INDEX idx_transactions_contributor ON public.transactions USING btree (contributor_id);
+CREATE INDEX idx_transactions_created_at ON public.transactions USING btree (created_at);
+CREATE INDEX idx_transactions_type ON public.transactions USING btree (type);
+CREATE INDEX idx_users_email ON public.users USING btree (email);
+CREATE INDEX idx_users_program ON public.users USING btree (program_id);
+CREATE INDEX idx_users_role ON public.users USING btree (role);
+CREATE INDEX idx_users_university ON public.users USING btree (university_id);
+CREATE INDEX idx_withdrawals_status ON public.withdrawals USING btree (status);
+CREATE INDEX idx_withdrawals_user ON public.withdrawals USING btree (user_id);
+
+-- Triggers
+CREATE OR REPLACE TRIGGER after_download_insert AFTER INSERT ON public.downloads FOR EACH ROW EXECUTE FUNCTION public.handle_project_download();
+CREATE OR REPLACE TRIGGER after_review_insert AFTER INSERT ON public.project_reviews FOR EACH ROW EXECUTE FUNCTION public.update_project_rating();
+CREATE OR REPLACE TRIGGER after_review_update AFTER UPDATE ON public.project_reviews FOR EACH ROW WHEN ((old.rating IS DISTINCT FROM new.rating) OR (old.status::text IS DISTINCT FROM new.status::text)) EXECUTE FUNCTION public.update_project_rating();
+CREATE OR REPLACE TRIGGER after_withdrawal_update AFTER UPDATE ON public.withdrawals FOR EACH ROW WHEN (old.status::text IS DISTINCT FROM new.status::text) EXECUTE FUNCTION public.handle_withdrawal_status_change();
+CREATE OR REPLACE TRIGGER update_blog_comments_updated_at BEFORE UPDATE ON public.blog_comments FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE OR REPLACE TRIGGER update_blog_posts_updated_at BEFORE UPDATE ON public.blog_posts FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE OR REPLACE TRIGGER update_courses_updated_at BEFORE UPDATE ON public.courses FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE OR REPLACE TRIGGER update_programs_updated_at BEFORE UPDATE ON public.programs FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE OR REPLACE TRIGGER update_project_reviews_updated_at BEFORE UPDATE ON public.project_reviews FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE OR REPLACE TRIGGER update_projects_updated_at BEFORE UPDATE ON public.projects FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE OR REPLACE TRIGGER update_teams_updated_at BEFORE UPDATE ON public.teams FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE OR REPLACE TRIGGER update_transactions_updated_at BEFORE UPDATE ON public.transactions FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE OR REPLACE TRIGGER update_universities_updated_at BEFORE UPDATE ON public.universities FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE OR REPLACE TRIGGER update_users_updated_at BEFORE UPDATE ON public.users FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE OR REPLACE TRIGGER update_withdrawals_updated_at BEFORE UPDATE ON public.withdrawals FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+-- Foreign keys
+ALTER TABLE ONLY public.blog_comments ADD CONSTRAINT blog_comments_blog_post_id_fkey FOREIGN KEY (blog_post_id) REFERENCES public.blog_posts(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.blog_comments ADD CONSTRAINT blog_comments_parent_comment_id_fkey FOREIGN KEY (parent_comment_id) REFERENCES public.blog_comments(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.blog_comments ADD CONSTRAINT blog_comments_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.blog_posts ADD CONSTRAINT blog_posts_author_id_fkey FOREIGN KEY (author_id) REFERENCES public.users(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.courses ADD CONSTRAINT courses_program_id_fkey FOREIGN KEY (program_id) REFERENCES public.programs(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.downloads ADD CONSTRAINT downloads_downloaded_by_fkey FOREIGN KEY (downloaded_by) REFERENCES public.users(id) ON DELETE SET NULL;
+ALTER TABLE ONLY public.downloads ADD CONSTRAINT downloads_project_id_fkey FOREIGN KEY (project_id) REFERENCES public.projects(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.notifications ADD CONSTRAINT notifications_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.programs ADD CONSTRAINT programs_university_id_fkey FOREIGN KEY (university_id) REFERENCES public.universities(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.project_reviews ADD CONSTRAINT project_reviews_project_id_fkey FOREIGN KEY (project_id) REFERENCES public.projects(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.project_reviews ADD CONSTRAINT project_reviews_reviewer_id_fkey FOREIGN KEY (reviewer_id) REFERENCES public.users(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.project_versions ADD CONSTRAINT project_versions_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.users(id);
+ALTER TABLE ONLY public.project_versions ADD CONSTRAINT project_versions_project_id_fkey FOREIGN KEY (project_id) REFERENCES public.projects(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.projects ADD CONSTRAINT projects_contributor_id_fkey FOREIGN KEY (contributor_id) REFERENCES public.users(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.projects ADD CONSTRAINT projects_course_id_fkey FOREIGN KEY (course_id) REFERENCES public.courses(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.projects ADD CONSTRAINT projects_team_id_fkey FOREIGN KEY (team_id) REFERENCES public.teams(id) ON DELETE SET NULL;
+ALTER TABLE ONLY public.team_members ADD CONSTRAINT team_members_team_id_fkey FOREIGN KEY (team_id) REFERENCES public.teams(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.team_members ADD CONSTRAINT team_members_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.teams ADD CONSTRAINT teams_creator_id_fkey FOREIGN KEY (creator_id) REFERENCES public.users(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.teams ADD CONSTRAINT teams_university_id_fkey FOREIGN KEY (university_id) REFERENCES public.universities(id);
+ALTER TABLE ONLY public.transactions ADD CONSTRAINT transactions_contributor_id_fkey FOREIGN KEY (contributor_id) REFERENCES public.users(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.transactions ADD CONSTRAINT transactions_download_id_fkey FOREIGN KEY (download_id) REFERENCES public.downloads(id) ON DELETE SET NULL;
+ALTER TABLE ONLY public.transactions ADD CONSTRAINT transactions_project_id_fkey FOREIGN KEY (project_id) REFERENCES public.projects(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.users ADD CONSTRAINT users_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.users ADD CONSTRAINT users_program_id_fkey FOREIGN KEY (program_id) REFERENCES public.programs(id);
+ALTER TABLE ONLY public.users ADD CONSTRAINT users_university_id_fkey FOREIGN KEY (university_id) REFERENCES public.universities(id);
+ALTER TABLE ONLY public.withdrawals ADD CONSTRAINT withdrawals_processed_by_fkey FOREIGN KEY (processed_by) REFERENCES public.users(id);
+ALTER TABLE ONLY public.withdrawals ADD CONSTRAINT withdrawals_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
