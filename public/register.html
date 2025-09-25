@@ -685,12 +685,14 @@
                 console.log('📋 Registration result:', result);
 
                 if (result.success) {
-                    showAlert(result.message, 'success');
-                    console.log('✅ Registration successful, redirecting to profile...');
+                    // If email confirmation is required, redirect to login with notice
+                    const notice = 'Registration successful. Check your email to confirm, then sign in.';
+                    showAlert(notice, 'success');
+                    console.log('✅ Registration successful, redirecting to login...');
 
                     setTimeout(() => {
-                        window.location.href = '/profile.html';
-                    }, 2000);
+                        window.location.href = '/login.html';
+                    }, 1500);
                 } else {
                     showAlert(result.message, 'error');
                     console.log('❌ Registration failed:', result.message);

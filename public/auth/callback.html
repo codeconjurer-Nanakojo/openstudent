@@ -16,15 +16,23 @@
                     .eq('id', session.user.id)
                     .single()
                     .then(({ data: userData }) => {
-                        if (userData?.role === 'admin') {
-                            window.location.href = '/admin.html'
-                        } else {
-                            window.location.href = '/profile.html'
+                        try {
+                            const stored = sessionStorage.getItem('redirectAfterAuth')
+                            sessionStorage.removeItem('redirectAfterAuth')
+                            if (userData?.role === 'admin') {
+                                window.location.href = '/admin.html'
+                            } else {
+                                const fallback = '/index.html'
+                                const dest = stored && typeof stored === 'string' ? stored : fallback
+                                window.location.href = dest
+                            }
+                        } catch (_) {
+                            window.location.href = '/index.html'
                         }
                     })
                     .catch(error => {
                         console.error('Error fetching user role:', error)
-                        window.location.href = '/profile.html'
+                        window.location.href = '/index.html'
                     })
             } else {
                 window.location.href = '/login.html'

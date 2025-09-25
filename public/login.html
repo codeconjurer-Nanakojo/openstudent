@@ -469,10 +469,23 @@
                     // Show success message
                     alertSuccess.classList.add('show');
 
-                    // Redirect to profile page after a short delay
+                    // Role-aware redirect after a short delay
                     setTimeout(() => {
-                        window.location.href = 'profile.html';
-                    }, 1500);
+                        try {
+                            const stored = sessionStorage.getItem('redirectAfterAuth');
+                            sessionStorage.removeItem('redirectAfterAuth');
+                            const role = result?.profile?.role;
+                            if (role === 'admin') {
+                                window.location.href = '/admin.html';
+                            } else {
+                                const fallback = '/index.html';
+                                const dest = stored && typeof stored === 'string' ? stored : fallback;
+                                window.location.href = dest;
+                            }
+                        } catch (_) {
+                            window.location.href = '/index.html';
+                        }
+                    }, 800);
                 } else {
                     console.log('❌ Login failed:', result.message);
                     // Show error message

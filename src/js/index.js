@@ -30,7 +30,7 @@ async function setupAuthAwareUI() {
       // Not logged in: redirect contribute to login
       if (ctaDashboard) ctaDashboard.style.display = 'none'
       if (navLogout) navLogout.style.display = 'none'
-      const toLogin = (e) => { e.preventDefault(); window.location.href = '/login.html' }
+      const toLogin = (e) => { e.preventDefault(); try { sessionStorage.setItem('redirectAfterAuth', '/upload.html') } catch(_) {} window.location.href = '/login.html' }
       if (navContribute) navContribute.addEventListener('click', toLogin)
       if (ctaContribute) ctaContribute.addEventListener('click', toLogin)
     }

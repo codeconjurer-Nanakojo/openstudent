@@ -14,9 +14,33 @@
                 <div class="nav-brand">
                     <a href="/"><i class="fas fa-graduation-cap"></i> OpenStudent</a>
                 </div>
+
+                <!-- Admin Tools Cards -->
+                <div class="container-card" style="padding:1rem; margin-top:1rem;">
+                    <div class="list-header" style="margin-bottom:.5rem;">
+                        <h2>Admin Tools</h2>
+                    </div>
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:1rem;">
+                        <a id="admin-tools-programs" href="/programs.html" class="card" style="display:block; padding:1rem; border:1px solid #e5e7eb; border-radius:.5rem; text-decoration:none; color:inherit;">
+                            <div class="card-body">
+                                <h3 class="card-title"><i class="fas fa-layer-group"></i> Manage Programs</h3>
+                                <p class="card-desc">Add and review academic programs.</p>
+                            </div>
+                        </a>
+                        <a id="admin-tools-courses" href="/courses.html" class="card" style="display:block; padding:1rem; border:1px solid #e5e7eb; border-radius:.5rem; text-decoration:none; color:inherit;">
+                            <div class="card-body">
+                                <h3 class="card-title"><i class="fas fa-list"></i> Manage Courses</h3>
+                                <p class="card-desc">Add courses per program and view existing ones.</p>
+                            </div>
+                        </a>
+                    </div>
+                </div>
                 <ul class="nav-links">
                     <li><a href="/documents.html"><i class="fas fa-book"></i> Browse</a></li>
                     <li><a href="/upload.html"><i class="fas fa-cloud-upload-alt"></i> Upload</a></li>
+                    <li><a href="/programs.html"><i class="fas fa-layer-group"></i> Programs</a></li>
+                    <li><a href="/courses.html"><i class="fas fa-list"></i> Courses</a></li>
+                    <li><a id="profile-btn" href="/profile.html"><i class="fas fa-id-badge"></i> Profile</a></li>
                     <li><a href="/admin.html" class="active"><i class="fas fa-shield-halved"></i> Admin</a></li>
                     <li><a href="#" id="nav-logout"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
                 </ul>

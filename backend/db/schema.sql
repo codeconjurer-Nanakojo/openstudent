@@ -40,6 +40,135 @@ as $$
   );
 $$;
 
+-- =====================================
+-- RLS Policies: Programs, Courses, Projects
+-- =====================================
+
+-- Helper: check if current user is owner of a row (by contributor_id or owner_id param)
+create or replace function public.is_owner(p_owner uuid)
+returns boolean
+language sql
+stable
+as $$
+  select auth.uid() is not null and auth.uid() = p_owner;
+$$;
+
+-- Enable RLS
+alter table if exists public.programs enable row level security;
+alter table if exists public.courses enable row level security;
+alter table if exists public.projects enable row level security;
+
+-- Programs policies
+create policy if not exists programs_select
+  on public.programs for select
+  using (true);
+
+create policy if not exists programs_insert_admin
+  on public.programs for insert
+  with check (public.is_admin());
+
+create policy if not exists programs_update_admin
+  on public.programs for update
+  using (public.is_admin())
+  with check (public.is_admin());
+
+create policy if not exists programs_delete_admin
+  on public.programs for delete
+  using (public.is_admin());
+
+-- Courses policies
+create policy if not exists courses_select
+  on public.courses for select
+  using (true);
+
+create policy if not exists courses_insert_admin
+  on public.courses for insert
+  with check (public.is_admin());
+
+create policy if not exists courses_update_admin
+  on public.courses for update
+  using (public.is_admin())
+  with check (public.is_admin());
+
+create policy if not exists courses_delete_admin
+  on public.courses for delete
+  using (public.is_admin());
+
+-- Projects moderation: status model and policies
+-- Ensure projects.status supports moderation lifecycle
+do $$
+begin
+  if not exists (
+    select 1 from information_schema.columns
+    where table_schema='public' and table_name='projects' and column_name='status'
+  ) then
+    -- if status column missing, create it
+    alter table public.projects add column status text not null default 'pending';
+  end if;
+end $$;
+
+-- Constrain allowed statuses
+alter table public.projects
+  add constraint if not exists chk_projects_status
+  check (status in ('draft','pending','approved','rejected','archived'));
+
+-- Visibility: public can read only approved rows; owners can read their own; admins can read all
+create policy if not exists projects_select_policy
+  on public.projects for select
+  using (
+    status = 'approved'
+    or public.is_owner(contributor_id)
+    or public.is_admin()
+  );
+
+-- Insert: authenticated contributors can insert; enforce ownership
+create policy if not exists projects_insert_policy
+  on public.projects for insert
+  with check (
+    auth.uid() is not null and public.is_owner(contributor_id)
+  );
+
+-- Update: owner can modify their rows except when status is approved; admins full
+create policy if not exists projects_update_policy
+  on public.projects for update
+  using (
+    public.is_admin() or (public.is_owner(contributor_id) and status <> 'approved')
+  )
+  with check (
+    public.is_admin() or (public.is_owner(contributor_id) and status <> 'approved')
+  );
+
+-- Delete: owner can delete their rows unless approved; admins full
+create policy if not exists projects_delete_policy
+  on public.projects for delete
+  using (
+    public.is_admin() or (public.is_owner(contributor_id) and status <> 'approved')
+  );
+
+-- Moderation logs: optional auditing of status transitions
+create table if not exists public.moderation_logs (
+  id uuid primary key default uuid_generate_v4(),
+  project_id uuid not null references public.projects(id) on delete cascade,
+  actor_id uuid,
+  from_status text,
+  to_status text,
+  created_at timestamptz not null default now()
+);
+
+create or replace function public.log_project_status_change()
+returns trigger language plpgsql as $$
+begin
+  if tg_op = 'UPDATE' and new.status is distinct from old.status then
+    insert into public.moderation_logs(project_id, actor_id, from_status, to_status)
+    values (new.id, auth.uid(), old.status, new.status);
+  end if;
+  return new;
+end$$;
+
+drop trigger if exists trg_projects_status_audit on public.projects;
+create trigger trg_projects_status_audit
+after update on public.projects
+for each row execute function public.log_project_status_change();
 -- Read policy: anyone can read active universities
 create policy if not exists universities_read_all
   on public.universities

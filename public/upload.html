@@ -461,15 +461,16 @@
                     <a href="/"><i class="fas fa-graduation-cap"></i> OpenStudent</a>
                 </div>
                 <ul class="nav-links">
-                    <li><a href="/documents.html"><i class="fas fa-book"></i> Browse Documents</a></li>
+                    <li><a href="/documents.html"><i class="fas fa-book"></i> Browse</a></li>
                     <li><a href="/upload.html" class="active"><i class="fas fa-cloud-upload-alt"></i> Upload</a></li>
-                    <li><a href="/profile.html"><i class="fas fa-user"></i> Profile</a></li>
-                    <li><a href="#" id="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                    <li><a id="profile-btn" href="/profile.html"><i class="fas fa-id-badge"></i> Profile</a></li>
+                    <li><a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
                 </ul>
             </div>
         </nav>
     </header>
 
+{{ ... }}
     <main>
         <div class="upload-container">
             <div class="upload-header">
@@ -756,6 +757,7 @@
             try {
                 const userResult = await getCurrentUser();
                 if (!userResult.success) {
+                    try { sessionStorage.setItem('redirectAfterAuth', window.location.pathname); } catch(_) {}
                     window.location.href = '/login.html';
                     return false;
                 }
@@ -763,6 +765,7 @@
                 return true;
             } catch (error) {
                 console.error('Authentication check failed:', error);
+                try { sessionStorage.setItem('redirectAfterAuth', window.location.pathname); } catch(_) {}
                 window.location.href = '/login.html';
                 return false;
             }

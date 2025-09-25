@@ -1,3 +1,15 @@
+        // Show sign-in prompt for anonymous users
+        async function setupAnonPrompt() {
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) {
+                    anonCta.style.display = 'flex';
+                    anonSignin.addEventListener('click', (e) => {
+                        try { sessionStorage.setItem('redirectAfterAuth', window.location.pathname); } catch(_) {}
+                    });
+                }
+            } catch (_) { /* noop */ }
+        }
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -29,6 +41,10 @@
                 <div class="section-header">
                     <h1>Browse Documents</h1>
                     <p>Search and filter approved, public documents contributed by students across Ghana.</p>
+                    <div id="anon-cta" class="alert" style="display:none; margin-top:.75rem;">
+                        <span>Want to contribute or access more materials?</span>
+                        <a id="anon-signin" class="btn" href="/login.html" style="margin-left:.5rem;"><i class="fas fa-right-to-bracket"></i> Sign in</a>
+                    </div>
                 </div>
 
                 <div id="message" class="message" style="display:none;"></div>
@@ -84,7 +100,7 @@
     </main>
 
     <script type="module">
-        import { getPrograms } from '/src/js/supabase.js';
+        import { getPrograms, supabase } from '/src/js/supabase.js';
         import { getCourses, getDocuments, countDocuments } from '/src/js/supabase2.js';
 
         const programSelect = document.getElementById('program-select');
@@ -98,6 +114,8 @@
         const prevBtn = document.getElementById('prev-page');
         const nextBtn = document.getElementById('next-page');
         const messageEl = document.getElementById('message');
+        const anonCta = document.getElementById('anon-cta');
+        const anonSignin = document.getElementById('anon-signin');
 
         const PAGE_SIZE = 12;
         let currentPage = 1;
@@ -300,6 +318,7 @@
         });
 
         // Init
+        setupAnonPrompt();
         loadPrograms();
         loadDocuments();
     </script>
