@@ -1,58 +1,16 @@
-🔍 Testing & Debugging Checklist
-1. Authentication & Session Hygiene
-Verify logout works on every page (Index, Profile, Admin, Upload).
+Digest: sha256:edeb591c9ec1212ad6d77be722d62d9dd260efebffa6b32ed12c9b8143e3ffba
+Status: Downloaded newer image for public.ecr.aws/supabase/studio:2025.09.22-sha-7b3007d
+Waiting for health checks...
+Started supabase local development setup.
 
-Try accessing protected pages while logged out → should redirect to Index.
-
-Confirm session state clears properly (no cached profile/admin data).
-
-2. Admin Catalog
-CRUD for Programs, Courses, Universities:
-
-Add, edit, delete, toggle active/inactive.
-
-Verify RLS: non‑admins can only read.
-
-Check UI refresh after each action.
-
-3. Leaderboards & Signals
-Admin Leaderboards tab:
-
-Top Contributors/Projects update with time‑window changes.
-
-Rising Contributors/Trending Projects show correct % change.
-
-CSV/JSON exports download valid data.
-
-4. Contributor Dashboard
-Profile page:
-
-Uploads list accurate.
-
-Badges progression updates.
-
-Trend badges show correct % change.
-
-“Top Contributors This Week” widget loads.
-
-5. Analytics & Trends
-Admin analytics cards:
-
-Totals (uploads/views/downloads) match DB counts.
-
-Trend badges update when switching time windows.
-
-Profile analytics:
-
-Personal trends computed correctly.
-
-6. Database & Security
-Test RLS policies:
-
-Contributor role → can read universities, cannot insert/update/delete.
-
-Admin role → full CRUD.
-
-Verify indexes exist (projects.created_at, views, download_count).
-
-Run RPCs directly in SQL editor to confirm correct results.
+         API URL: http://127.0.0.1:54321
+     GraphQL URL: http://127.0.0.1:54321/graphql/v1
+  S3 Storage URL: http://127.0.0.1:54321/storage/v1/s3
+    Database URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+      Studio URL: http://127.0.0.1:54323
+     Mailpit URL: http://127.0.0.1:54324
+ Publishable key: sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH
+      Secret key: sb_secret_N7UND0UgjKTVK-Uodkm0Hg_xSvEMPvz
+   S3 Access Key: 625729a08b95bf1b7ff351a663f3a23c
+   S3 Secret Key: 850181e4652dd023b7a98c58ae0d2d34bd487ee0cc3254aed6eda37307425907
+       S3 Region: local
