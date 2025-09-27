@@ -45,6 +45,15 @@ This project now uses Supabase migrations to manage all database changes. Do not
 
 - `public/documents.html` now defines and calls `setupAnonPrompt()` within its module script to show a sign-in prompt for anonymous users and to initialize the documents page without undefined function errors.
 
+### RLS: Users table policy guidance
+
+- Policies on `public.users` must not self-reference the `users` table via helper functions that query `users` (e.g., `is_superadmin()`), otherwise PostgREST may recurse when reading `users` and trigger "stack depth limit exceeded".
+- Allowed policies on `public.users` are simple, non-recursive:
+  - Select: `USING (auth.uid() = id)`
+  - Update: `USING (auth.uid() = id)`
+  - Insert: `WITH CHECK (auth.uid() = id)`
+- Role management is enforced by a trigger on `public.users` for role changes; do not rely on recursive policies on `public.users`.
+
 ## Role Hierarchy
 
 - **superadmin**
