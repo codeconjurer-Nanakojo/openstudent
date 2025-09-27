@@ -694,7 +694,8 @@
         const submitBtn = document.getElementById('submit-btn');
         const loadingSpinner = document.getElementById('loading-spinner');
         const messageDiv = document.getElementById('message');
-        const logoutBtn = document.getElementById('logout-btn');
+        // Support either kebab or camel case ID for logout link
+        const logoutBtn = document.getElementById('logout-btn') || document.getElementById('logoutBtn');
 
         // Upload method elements
         const uploadOptions = document.querySelectorAll('.upload-option');
@@ -1095,15 +1096,17 @@
             }
         });
 
-        logoutBtn.addEventListener('click', async (e) => {
-            e.preventDefault();
-            try {
-                await signOut();
-                window.location.href = '/index.html';
-            } catch (error) {
-                console.error('Logout error:', error);
-            }
-        });
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                try {
+                    await signOut();
+                    window.location.href = '/index.html';
+                } catch (error) {
+                    console.error('Logout error:', error);
+                }
+            });
+        }
 
         // Initialize Page
         const initializePage = async () => {
