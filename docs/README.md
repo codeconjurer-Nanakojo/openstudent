@@ -23,10 +23,7 @@ This project now uses Supabase migrations to manage all database changes. Do not
 ### Seed Data
 
 - Seed script lives at `supabase/seed.sql`.
-- Includes two users and sample entities for quick testing:
-  - Admin user: `admin@example.com`
-  - Contributor user: `contrib@example.com`
-  - One university, program, course, and project
+- The seed file no longer inserts any data. Use the frontend (admin dashboard and public flows) to create initial users, universities, programs, courses, and projects.
 
 ### Baseline Migration
 
@@ -42,6 +39,32 @@ This project now uses Supabase migrations to manage all database changes. Do not
 - After creating migrations, verify locally:
   - `supabase db reset`
   - Confirm schema builds, seed data loads, and core flows work.
+  - Registration: New users can sign up because `public.users` RLS includes self-insert/select/update policies.
+
+### Frontend initialization notes
+
+- `public/documents.html` now defines and calls `setupAnonPrompt()` within its module script to show a sign-in prompt for anonymous users and to initialize the documents page without undefined function errors.
+
+## Role Hierarchy
+
+- **superadmin**
+  - Full admin powers plus the ability to promote/demote any user's `public.users.role`.
+  - Can manage all rows in `public.users` (RLS policy `users_superadmin_manage_all`).
+  - Only role allowed to change another user's role (enforced by trigger `trg_users_before_update_enforce_role_change`).
+
+- **admin**
+  - Full CRUD on content (projects, courses, programs, universities, etc.).
+  - Can view all users and toggle their `active` flag, but cannot change `role` (attempts are blocked by the trigger).
+
+- **contributor/viewer**
+  - Contributors can manage their own content per existing RLS policies.
+  - Anonymous/viewers can read approved public projects and catalog.
+
+### Admin UI visibility
+
+- **Superadmin** sees an extra "Superadmin Tools" section and role dropdowns in the Users tab.
+- **Admin** does not see role dropdowns; content management remains available.
+- **Contributors/Viewers** cannot access `/admin.html`.
 
 ## Contribution Guide
 

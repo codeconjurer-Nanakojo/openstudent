@@ -75,14 +75,23 @@
         const PROJ_PAGE_SIZE = 20;
         let projCurrentPage = 1;
         let projTotalCount = 0;
-        // Admin-only guard
+        // Admin or Superadmin guard and UI role flags
+        let CURRENT_ROLE = null;
+        let IS_SUPERADMIN = false;
         (async () => {
             const res = await getProfile();
             const role = res?.profile?.role;
             const active = res?.profile?.active;
-            if (role !== 'admin' || active === false) {
+            CURRENT_ROLE = role;
+            IS_SUPERADMIN = role === 'superadmin';
+            // Only allow admin/superadmin and active accounts
+            if ((role !== 'admin' && role !== 'superadmin') || active === false) {
                 window.location.href = '/profile.html';
+                return;
             }
+            // Toggle Superadmin tools section
+            const saTools = document.getElementById('superadmin-tools');
+            if (saTools) saTools.style.display = IS_SUPERADMIN ? 'block' : 'none';
         })();
 
 
@@ -308,25 +317,29 @@
                         <div class="item-sub">${u.email} • Role: ${u.role || 'user'} • Active: ${u.active ? 'Yes' : 'No'} • Onboarding: ${u.onboarding_complete ? 'Yes' : 'No'}</div>
                     </div>
                     <div class="btn-group">
+                        ${IS_SUPERADMIN ? `
                         <select class="btn" data-action="role" data-id="${u.id}">
                             <option value="user" ${u.role==='user'?'selected':''}>User</option>
                             <option value="contributor" ${u.role==='contributor'?'selected':''}>Contributor</option>
                             <option value="admin" ${u.role==='admin'?'selected':''}>Admin</option>
-                        </select>
+                            <option value="superadmin" ${u.role==='superadmin'?'selected':''}>Superadmin</option>
+                        </select>` : ''}
                         <button class="btn ${u.active? 'warning' : 'primary'}" data-action="active" data-id="${u.id}">${u.active? 'Suspend' : 'Activate'}</button>
                         <button class="btn" data-action="view-projects" data-id="${u.id}">View Projects</button>
                     </div>
                 </div>
             `).join('');
 
-            usersList.querySelectorAll('select[data-action="role"]').forEach(sel => {
-                sel.addEventListener('change', async () => {
-                    const id = sel.getAttribute('data-id');
-                    const role = sel.value;
-                    const { error } = await updateUserRole(id, role);
-                    if (error) showMessage(error.message || 'Failed to update role'); else showMessage('Role updated', 'success');
+            if (IS_SUPERADMIN) {
+                usersList.querySelectorAll('select[data-action="role"]').forEach(sel => {
+                    sel.addEventListener('change', async () => {
+                        const id = sel.getAttribute('data-id');
+                        const role = sel.value;
+                        const { error } = await updateUserRole(id, role);
+                        if (error) showMessage(error.message || 'Failed to update role'); else showMessage('Role updated', 'success');
+                    });
                 });
-            });
+            }
 
             usersList.querySelectorAll('button[data-action="active"]').forEach(btn => {
                 btn.addEventListener('click', async () => {
