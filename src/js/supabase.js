@@ -3,6 +3,12 @@ import { createClient } from '@supabase/supabase-js'
 // Initialize Supabase client securely
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+const supabaseServiceRoleMaybe = import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY
+
+// Guard: never use service role key in frontend
+if (typeof window !== 'undefined' && supabaseServiceRoleMaybe) {
+  console.warn('⚠️ VITE_SUPABASE_SERVICE_ROLE_KEY is present in frontend env. This must NOT be exposed to the browser. Remove it from .env/.deployment environments intended for the client.')
+}
 
 // Validate environment variables
 if (!supabaseUrl || !supabaseAnonKey) {
@@ -10,7 +16,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Supabase configuration incomplete. Check environment variables.')
 }
 
-console.log('🔗 Initializing Supabase client...')
+console.log('🔗 Initializing Supabase client...', { mode: import.meta.env.MODE })
 const supabase = createClient(supabaseUrl, supabaseAnonKey)
 console.log('✅ Supabase client initialized successfully')
 
